@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "rl-framework"
+version = "0.1.0"
+description = "An easy-to-read Reinforcement Learning (RL) framework. Provides standardized interfaces and implementations to various Reinforcement Learning methods and environments. Also this is the main place to start your journey with Reinforcement Learning and learn from tutorials and examples."
+authors = ["Alexander Zap <alexander.zap@alexanderthamm.com>"]
+license = "Proprietary"
+packages = [
+    { include = "rl_framework", from = "src" },
+]
+include = ["src/rl_framework/res/*"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+importlib-metadata = {version = "^1.0", python = "<3.8"}
+
+[tool.poetry.dev-dependencies]
+black = "^22.10"
+pre-commit = "^2.20"
+pytest = "^7.2"
+pytest-cov = "^4.0"
+jupyterlab = "^3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
