@@ -4,6 +4,18 @@ An easy-to-read Reinforcement Learning (RL) framework. Provides standardized int
 
 ## Getting Started
 
+### Activate your development environment
+
+If you are on a UNIX-based OS:
+You are fine. Continue with the next step.
+
+If you are on Windows:
+Make sure to use a WSL Python interpreter as your development environment, since we require a UNIX-based system underneath Python to run a lot of the environments and algorithms.
+For users using PyCharm, see https://www.jetbrains.com/help/pycharm/using-wsl-as-a-remote-interpreter.html for more information.
+For users using Visual Studio Code, see https://code.visualstudio.com/docs/remote/wsl-tutorial and https://code.visualstudio.com/docs/remote/wsl for more information.
+
+### Install all dependencies in your development environment
+
 To set up your local development environment, please run:
 
     poetry install

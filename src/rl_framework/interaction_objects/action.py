@@ -1,0 +1,2 @@
+class AgentAction:
+    pass

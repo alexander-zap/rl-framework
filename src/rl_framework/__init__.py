@@ -5,5 +5,3 @@ An easy-to-read Reinforcement Learning (RL) framework. Provides standardized int
 """
 __title__ = "rl-framework"
 __copyright__ = "© 2023 Alexander Zap"
-
-from .version import __version__

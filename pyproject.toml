@@ -10,8 +10,13 @@ packages = [
 include = ["src/rl_framework/res/*"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-importlib-metadata = {version = "^1.0", python = "<3.8"}
+python = "^3.10"
+setuptools = "^65.5.0"
+stable-baselines3 = {extras = ["extra"], version = "*"}
+box2d = "*"
+box2d-kengz = "*"
+huggingface-sb3 = "*"
+pyglet = "1.5.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.10"
