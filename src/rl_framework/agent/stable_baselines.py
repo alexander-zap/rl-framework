@@ -2,7 +2,7 @@ from rl_framework.agent import Agent
 from rl_framework.environment import Environment
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from typing import Callable, List, Text
+from typing import List, Text
 
 
 class StableBaselinesAgent(Agent):
@@ -31,12 +31,10 @@ class StableBaselinesAgent(Agent):
         self._model = PPO(
             policy="MlpPolicy",
             env=training_env,
-            n_steps=1024,
+            n_steps=512,
             batch_size=128,
-            n_epochs=5,
+            n_epochs=10,
             gamma=0.998,
-            gae_lambda=0.99,
-            ent_coef=0.01,
             verbose=1,
         )
 
@@ -49,7 +47,7 @@ class StableBaselinesAgent(Agent):
         The model is changed in place, therefore the updated model can be accessed in the `.model` attribute
         after the agent has been trained.
         """
-        self._model.learn(total_timesteps=1000)
+        self._model.learn(total_timesteps=1000000)
 
     def save(self, file_path: Text):
         """
