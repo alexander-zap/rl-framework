@@ -6,6 +6,15 @@ from typing import Callable, List, Text
 
 
 class StableBaselinesAgent(Agent):
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._model = value
+
     def __init__(self, environments: List[Environment]):
         """
         Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
@@ -19,7 +28,7 @@ class StableBaselinesAgent(Agent):
         training_env = make_vec_env(lambda: next(environment_iterator), n_envs=len(environments))
 
         # TODO: Do not hardcode the algorithm here.
-        self.model = PPO(
+        self._model = PPO(
             policy="MlpPolicy",
             env=training_env,
             n_steps=1024,
@@ -40,7 +49,7 @@ class StableBaselinesAgent(Agent):
         The model is changed in place, therefore the updated model can be accessed in the `.model` attribute
         after the agent has been trained.
         """
-        self.model.learn(total_timesteps=1000)
+        self._model.learn(total_timesteps=1000)
 
     def save(self, file_path: Text):
         """
@@ -49,4 +58,4 @@ class StableBaselinesAgent(Agent):
         Args:
             file_path (Text): Path where the model should be saved to.
         """
-        self.model.save(file_path)
+        self._model.save(file_path)
