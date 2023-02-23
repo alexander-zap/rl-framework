@@ -1,4 +1,4 @@
-from rl_framework.algorithm import Agent
+from rl_framework.agent import Agent
 from rl_framework.environment import Environment
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
@@ -8,6 +8,7 @@ from typing import Callable, List, Text
 class StableBaselinesAgent(Agent):
     def __init__(self, environments: List[Environment]):
         """
+        Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
 
         Args:
             environments (List[Environment]): List of environments on which the agent should be trained on.
@@ -35,15 +36,17 @@ class StableBaselinesAgent(Agent):
         Train the instantiated agent on the environment.
 
         This training is done by using the agent-on-environment training method provided by Stable-baselines3.
+
+        The model is changed in place, therefore the updated model can be accessed in the `.model` attribute
+        after the agent has been trained.
         """
         self.model.learn(total_timesteps=1000)
 
     def save(self, file_path: Text):
         """
-        Save the model of the instantiated agent to a zipped file.
+        Save the model of the agent to a zipped file.
 
         Args:
             file_path (Text): Path where the model should be saved to.
         """
-
         self.model.save(file_path)

@@ -1,5 +1,5 @@
 import gym
-from rl_framework.algorithm.stable_baselines import StableBaselinesAgent
+from rl_framework.agent.stable_baselines import StableBaselinesAgent
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.vec_env import DummyVecEnv
