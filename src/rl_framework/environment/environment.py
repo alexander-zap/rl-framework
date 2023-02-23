@@ -1,9 +1,9 @@
 import gym
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Tuple
 
 
-class Environment(gym.Env):
+class Environment(ABC, gym.Env):
     """
     Environment base class, from which every Environment should be inherited.
 
