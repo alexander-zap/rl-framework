@@ -14,8 +14,8 @@ class StableBaselinesAgent(Agent):
                 Providing multiple environments enables parallel training of an agent.
         """
 
-        raw_environment_iterator = iter([environment.raw_environment for environment in environments])
-        training_env = make_vec_env(lambda: next(raw_environment_iterator), n_envs=len(environments))
+        environment_iterator = iter(environments)
+        training_env = make_vec_env(lambda: next(environment_iterator), n_envs=len(environments))
 
         # TODO: Do not hardcode the algorithm here.
         self.model = PPO(

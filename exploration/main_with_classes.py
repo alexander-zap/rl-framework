@@ -47,7 +47,7 @@ if __name__ == "__main__":
     agent.save(file_path=f"{MODEL_ARCHITECTURE}-{ENV_ID}")
 
     # Evaluate the model
-    evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0].raw_environment)
+    evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0])
 
     # Upload the model
-    upload_to_huggingface_hub(agent, environments[0].raw_environment)
+    upload_to_huggingface_hub(agent, environments[0])
