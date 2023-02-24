@@ -31,10 +31,12 @@ class StableBaselinesAgent(Agent):
         self._model = PPO(
             policy="MlpPolicy",
             env=training_env,
-            n_steps=512,
-            batch_size=128,
-            n_epochs=10,
-            gamma=0.998,
+            n_steps=1024,
+            batch_size=64,
+            n_epochs=4,
+            gamma=0.999,
+            gae_lambda=0.98,
+            ent_coef=0.01,
             verbose=1,
         )
 

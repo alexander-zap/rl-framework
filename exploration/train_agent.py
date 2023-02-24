@@ -7,7 +7,7 @@ MODEL_ARCHITECTURE = "PPO"
 PARALLEL_ENVIRONMENTS = 32
 
 MODEL_NAME = f"{MODEL_ARCHITECTURE}-{ENV_ID}"
-REPO_ID = f"zap-thamm/{MODEL_NAME}"
+REPO_ID = f"zap-thamm/{MODEL_NAME}_development"
 COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {ENV_ID}"
 
 if __name__ == "__main__":
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     agent.train()
 
     # Optional: Save the model
-    agent.save(file_path=f"{MODEL_NAME}")
+    # agent.save(file_path=f"{MODEL_NAME}")
 
     # Evaluate the model
     mean_reward, std_reward = evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0])
