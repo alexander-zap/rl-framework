@@ -6,7 +6,6 @@ from typing import List, Text
 
 
 class StableBaselinesAgent(Agent):
-
     @property
     def model(self):
         return self._model
@@ -25,7 +24,9 @@ class StableBaselinesAgent(Agent):
         """
 
         environment_iterator = iter(environments)
-        training_env = make_vec_env(lambda: next(environment_iterator), n_envs=len(environments))
+        training_env = make_vec_env(
+            lambda: next(environment_iterator), n_envs=len(environments)
+        )
 
         # TODO: Do not hardcode the algorithm here.
         self._model = PPO(

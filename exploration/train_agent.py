@@ -24,7 +24,9 @@ if __name__ == "__main__":
     # agent.save(file_path=f"{MODEL_NAME}")
 
     # Evaluate the model
-    mean_reward, std_reward = evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0])
+    mean_reward, std_reward = evaluate(
+        agent_to_evaluate=agent, evaluation_environment=environments[0]
+    )
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 
     # Upload the model
@@ -35,5 +37,5 @@ if __name__ == "__main__":
         model_architecture=MODEL_ARCHITECTURE,
         environment_name=ENV_ID,
         repository_id=REPO_ID,
-        commit_message=COMMIT_MESSAGE
+        commit_message=COMMIT_MESSAGE,
     )

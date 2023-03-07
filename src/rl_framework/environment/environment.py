@@ -38,8 +38,7 @@ class Environment(ABC, gym.Env):
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
-        """ Initialize the environment.
-        """
+        """Initialize the environment."""
         raise NotImplementedError
 
     @abstractmethod
@@ -75,38 +74,38 @@ class Environment(ABC, gym.Env):
     def render(self, mode="human"):
         """Renders the environment.
 
-            The set of supported modes varies per environment. (And some
-            environments do not support rendering at all.) By convention,
-            if mode is:
+        The set of supported modes varies per environment. (And some
+        environments do not support rendering at all.) By convention,
+        if mode is:
 
-            - human: render to the current display or terminal and
-              return nothing. Usually for human consumption.
-            - rgb_array: Return an numpy.ndarray with shape (x, y, 3),
-              representing RGB values for an x-by-y pixel image, suitable
-              for turning into a video.
-            - ansi: Return a string (str) or StringIO.StringIO containing a
-              terminal-style text representation. The text can include newlines
-              and ANSI escape sequences (e.g. for colors).
+        - human: render to the current display or terminal and
+          return nothing. Usually for human consumption.
+        - rgb_array: Return an numpy.ndarray with shape (x, y, 3),
+          representing RGB values for an x-by-y pixel image, suitable
+          for turning into a video.
+        - ansi: Return a string (str) or StringIO.StringIO containing a
+          terminal-style text representation. The text can include newlines
+          and ANSI escape sequences (e.g. for colors).
 
-            Note:
-                Make sure that your class's metadata 'render.modes' key includes
-                  the list of supported modes. It's recommended to call super()
-                  in implementations to use the functionality of this method.
+        Note:
+            Make sure that your class's metadata 'render.modes' key includes
+              the list of supported modes. It's recommended to call super()
+              in implementations to use the functionality of this method.
 
-            Args:
-                mode (str): the mode to render with
+        Args:
+            mode (str): the mode to render with
 
-            Example:
+        Example:
 
-            class MyEnv(Env):
-                metadata = {'render.modes': ['human', 'rgb_array']}
+        class MyEnv(Env):
+            metadata = {'render.modes': ['human', 'rgb_array']}
 
-                def render(self, mode='human'):
-                    if mode == 'rgb_array':
-                        return np.array(...) # return RGB frame suitable for video
-                    elif mode == 'human':
-                        ... # pop up a window and render
-                    else:
-                        super(MyEnv, self).render(mode=mode) # just raise an exception
-            """
+            def render(self, mode='human'):
+                if mode == 'rgb_array':
+                    return np.array(...) # return RGB frame suitable for video
+                elif mode == 'human':
+                    ... # pop up a window and render
+                else:
+                    super(MyEnv, self).render(mode=mode) # just raise an exception
+        """
         raise NotImplementedError
