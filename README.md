@@ -24,6 +24,12 @@ Behind the scenes, this creates a virtual environment and installs `rl_framework
 
 You can now import functions and classes from the module with `import rl_framework`.
 
+### Preparation for pushing your models to the HuggingFace Hub
+1. Create an account to HuggingFace and sign in. ➡ https://huggingface.co/join
+2. Create a new token with write role. ➡ https://huggingface.co/settings/tokens
+3. Store your authentication token from the Hugging Face website. ➡ `huggingface-cli login`
+
+
 ### Testing
 
 We use `pytest` as test framework. To execute the tests, please run
