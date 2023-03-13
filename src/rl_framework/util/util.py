@@ -1,4 +1,4 @@
-from huggingface_sb3 import package_to_hub, load_from_hub
+from huggingface_sb3 import package_to_hub, load_from_hub, push_to_hub
 from rl_framework.agent.stable_baselines import StableBaselinesAgent, StableBaselinesAlgorithm
 from rl_framework.environment import Environment
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -46,7 +46,7 @@ def upload_to_huggingface_hub(
     environment_name: Text,
     repository_id: Text,
     commit_message: Text,
-    gym_environment: bool = True,
+    detailed_model_card: bool = True,
 ) -> None:
     """
 
@@ -58,22 +58,22 @@ def upload_to_huggingface_hub(
         environment_name (Text): Name of the environment (only used for model card and metadata).
         repository_id (Text): Id of the model repository from the Hugging Face Hub.
         commit_message (Text): Commit message for the HuggingFace repository commit.
-        gym_environment (bool): Flag whether the used environment is a Gym environment.
-            Only Gym environments are supported for detailed model card creation with `package_to_hub`.
-            Alternatively we will use `push_to_hub` and create a minimal model card.
+        detailed_model_card (bool): Whether a model card should be created including evaluation metrics and a video.
+            Alternatively only a minimal model card will be created with just the saved model file.
 
     NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the following code
         `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
         And don't forget to do a `git push` at the end to push the change to the hub.
 
     """
-    if gym_environment:
-        # Create a Stable-baselines3 vector environment (required for HuggingFace upload function)
+    if detailed_model_card:
         vectorized_evaluation_environment = DummyVecEnv(
             [lambda: evaluation_environment]
         )
 
         model = agent_to_upload.model
+
+        # Evaluate and record a replay video of your agent, then push the saved model to the the HuggingFace repository.
         package_to_hub(
             model=model,
             model_name=model_name,
@@ -84,7 +84,15 @@ def upload_to_huggingface_hub(
             commit_message=commit_message,
         )
     else:
-        # TODO
+        # Only push the saved model (one .zip file) to the HuggingFace repository.
+        file_name = f"{model_name}.zip"
+        agent_to_upload.save(file_name)
+
+        push_to_hub(
+            repo_id=repository_id,
+            filename=file_name,
+            commit_message=commit_message
+        )
         pass
 
 

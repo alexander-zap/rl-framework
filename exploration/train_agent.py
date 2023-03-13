@@ -56,8 +56,8 @@ if __name__ == "__main__":
             }
         )
 
-    # Train agent
-    agent.train(environments=environments, total_timesteps=100000)
+        # Train agent
+        agent.train(environments=environments, total_timesteps=100000)
 
     # Optional: Save the model
     # agent.save(file_path=f"{MODEL_NAME}")

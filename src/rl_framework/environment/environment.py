@@ -13,6 +13,7 @@ class Environment(ABC, gym.Env):
     This is a standardized environment interface and should be used for every new environment created.
     For more guidance, on how to create new custom environments, see following description:
     https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html
+    https://www.gymlibrary.dev/content/environment_creation/
     """
 
     @property
