@@ -2,7 +2,13 @@
 
 An easy-to-read Reinforcement Learning (RL) framework. Provides standardized interfaces and implementations to various Reinforcement Learning methods and environments. Also this is the main place to start your journey with Reinforcement Learning and learn from tutorials and examples.
 
-## Getting Started
+### Main Features
+- Choose from a growing number of **Gym environments** and **MLAgent environments**
+- Using various Reinforcement Learning algorithms for learning, which are implemented in **Stable-Baselines 3**
+- Integrate or implement own **custom environments and agents** in a standardized interface
+- Upload your models to the **HuggingFace Hub**
+
+## Set-Up
 
 ### Activate your development environment
 
@@ -24,23 +30,79 @@ Behind the scenes, this creates a virtual environment and installs `rl_framework
 
 You can now import functions and classes from the module with `import rl_framework`.
 
-### Preparation for pushing your models to the HuggingFace Hub
+### Optional: Preparation for pushing your models to the HuggingFace Hub
 1. Create an account to HuggingFace and sign in. ➡ https://huggingface.co/join
 2. Create a new token with write role. ➡ https://huggingface.co/settings/tokens
 3. Store your authentication token from the Hugging Face website. ➡ `huggingface-cli login`
 
+### Optional: Preparation for using a Unity environment (optional)
+In order to use environments based on the Unity game framework, make sure to follow the installation procedures detailed in [following installation guideline provided by Unity Technologies](https://github.com/Unity-Technologies/ml-agents/blob/develop/docs/Installation.md).
+In short:
+1. Install Unity. ➡ https://unity.com/download
+2. Create a new Unity project.
+3. Navigate to the menu `Window -> Package Manager` and install the `com.unity.ml-agents` package in Unity. ➡ https://docs.unity3d.com/Manual/upm-ui-install.html
 
-### Testing
+## Getting Started
 
-We use `pytest` as test framework. To execute the tests, please run
+### Configuring an environment
+To integrate your environment you wish to train on, you need to create an Environment class representing your problem. For this you can
+- you use an existing Gym environment with [the `GymEnvironment` class](src/rl_framework/environment/gym_environment.py)
+- you use an existing MLAgent environment with [the `MLAgentEnvironment` class](src/rl_framework/environment/mlagents_environment.py)
+- create a custom environment by inheriting from [the base `Environment` class](src/rl_framework/environment/environment.py), which specifies the required interface
 
-    pytest tests
 
-To run the tests with coverage information, please use
+### Configuring an agent
+To integrate the Reinforcement Learning algorithm you wish to train an agent on your environment with, you need to create an Agent class representing your training agent. For this you can
+- you use an existing Reinforcement Learning Algorithm implemented in the Stable-Baselines 3 framework with [the `StableBaselinesAgent` class](src/rl_framework/agent/stable_baselines.py)
+- create a custom Reinforcement Learning algorithm by inheriting from [the base `Agent` class](src/rl_framework/agent/agent.py), which specifies the required interface
 
-    pytest tests --cov=src --cov-report=html --cov-report=term
 
-and have a look at the `htmlcov` folder, after the tests are done.
+### Training
+
+After configuring the environment and the agent, you can start training your agent on the environment.
+This can be done in one line of code:
+```
+agent.train(environments=environments, total_timesteps=100000)
+```
+Independent of which environment and which agent you choose, the unified interface allows to always start the training this way.
+
+### Evaluating
+
+Once you trained the agent, you can evaluate the agent policy on the environment and get the average accumulated reward (and standard deviation) as evaluation metric.
+This evaluation method is implemented in the [util functions](src/rl_framework/util/util.py) and called with one line of code:
+```
+evaluate(agent_to_evaluate=agent, evaluation_environment=environment)
+```
+
+### Uploading and downloading models from the HuggingFace Hub
+
+Once you trained the agent, you can upload the agent model to the HuggingFace Hub in order to share and compare your agent to others. You can also downloaded yours or other agents from the same HuggingFace Hub and use them for solving environments or re-training.
+The methode which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util functions](src/rl_framework/util/util.py).
+
+### Example
+
+In [this example script](exploration/train_agent.py) you can see all of the above steps unified.
+
+For a quick impression in this README, find a minimal training and evaluation example here:
+```
+# Create environment(s); multiple environments for parallel training
+environments = [GymEnvironmentWrapper(ENV_ID) for _ in range(PARALLEL_ENVIRONMENTS)]
+
+# Create new agent
+agent = StableBaselinesAgent(
+    rl_algorithm=StableBaselinesAlgorithm.PPO,
+    rl_algorithm_parameters={
+        "policy": "MlpPolicy"
+    }
+)
+# Train agent
+agent.train(environments=environments, total_timesteps=100000)
+
+# Evaluate the model
+mean_reward, std_reward = evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0])
+```
+
+## Development
 
 ### Notebooks
 
@@ -60,6 +122,19 @@ Assuming you already have Jupyter installed, you can make your virtual environme
     poetry run python -m ipykernel install --user --name="rl-framework"
 
 Note that we mainly use notebooks for experiments, visualizations and reports. Every piece of functionality that is meant to be reused should go into module code and be imported into notebooks.
+
+
+### Testing
+
+We use `pytest` as test framework. To execute the tests, please run
+
+    pytest tests
+
+To run the tests with coverage information, please use
+
+    pytest tests --cov=src --cov-report=html --cov-report=term
+
+and have a look at the `htmlcov` folder, after the tests are done.
 
 ### Distribution Package
 
