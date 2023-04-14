@@ -1,12 +1,12 @@
 """
-This is a wrapper Environment class for MLAgent environments (environments built in Unity).
+This is a wrapper Environment class for MLAgents environments (environments built in Unity).
 """
 
 from typing import Tuple, Text
 from rl_framework.environment import Environment
 
 
-class GymEnvironmentWrapper(Environment):
+class MLAgentsEnvironmentWrapper(Environment):
     """
     """
 
