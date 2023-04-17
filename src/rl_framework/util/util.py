@@ -23,12 +23,12 @@ def evaluate_agent(agent: Agent, evaluation_environment: Environment, n_eval_epi
         seed = seeds[episode] if episode < len(seeds) else None
         episode_reward = 0
         prev_observation = evaluation_environment.reset(seed=seed)
-        prev_action = agent.choose_action(prev_observation, greedy=True)
+        prev_action = agent.choose_action(prev_observation)
 
         while True:
             observation, reward, done, info = evaluation_environment.step(prev_action)
             # next action to be executed (based on new observation)
-            action = agent.choose_action(observation, greedy=True)
+            action = agent.choose_action(observation)
             episode_reward += reward
             prev_action = action
 
