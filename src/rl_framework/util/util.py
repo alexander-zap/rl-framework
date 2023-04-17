@@ -1,16 +1,14 @@
-from rl_framework.agent import Agent
-from rl_framework.environment import Environment
 from typing import Optional, List
 import numpy as np
 from tqdm import tqdm
 
 
-def evaluate_agent(agent: Agent, evaluation_environment: Environment, n_eval_episodes: int,
+def evaluate_agent(agent, evaluation_environment, n_eval_episodes: int,
                    seeds: Optional[List[int]] = None):
     """
     Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
     Args:
-        agent: Agent to evaluate
+        agent (Agent): Agent to evaluate
         evaluation_environment (Environment): The evaluation environment.
         n_eval_episodes (int): Number of episode to evaluate the agent.
         seeds (Optional[List[int]]): List of seeds for evaluations.

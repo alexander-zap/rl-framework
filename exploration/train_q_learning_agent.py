@@ -6,12 +6,12 @@ ENV_ID = "Taxi-v3"
 MODEL_ARCHITECTURE = "QLearning"
 PARALLEL_ENVIRONMENTS = 32
 
-DOWNLOAD_EXISTING_AGENT = False
+DOWNLOAD_EXISTING_AGENT = True
 MODEL_NAME = f"{MODEL_ARCHITECTURE}-{ENV_ID}"
 REPO_ID = f"zap-thamm/{MODEL_NAME}"
 COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {ENV_ID}"
 
-N_TRAINING_EPISODES = 1000000
+N_TRAINING_EPISODES = 100000
 N_EVALUATION_EPISODES = 100
 
 LEARNING_RATE = 0.1
@@ -34,20 +34,6 @@ if __name__ == "__main__":
 
     print("\n _____REWARD RANGE_____ \n")
     print("Reward Range Interval", environment.reward_range)
-
-    # Create new agent
-    agent = QLearningAgent(
-        alpha=LEARNING_RATE,
-        gamma=DISCOUNT_FACTOR,
-        epsilon=MAX_EPSILON,
-        epsilon_min=MIN_EPSILON,
-        n_actions=environment.action_space.n,
-        n_observations=environment.observation_space.n,
-        randomize_q_table=False,
-    )
-
-    # Train agent
-    agent.train(training_environments=[environment], n_episodes=N_TRAINING_EPISODES)
 
     seeds = [
         16,
@@ -151,36 +137,46 @@ if __name__ == "__main__":
         28,
         148,
     ]
+
+    # Create new agent
+    agent = QLearningAgent(
+        alpha=LEARNING_RATE,
+        gamma=DISCOUNT_FACTOR,
+        epsilon=MAX_EPSILON,
+        epsilon_min=MIN_EPSILON,
+        n_actions=environment.action_space.n,
+        n_observations=environment.observation_space.n,
+        randomize_q_table=False,
+    )
+
+    if DOWNLOAD_EXISTING_AGENT:
+        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="q-learning.pkl")
+
+    else:
+        # Train agent
+        agent.train(training_environments=[environment], n_episodes=N_TRAINING_EPISODES)
+
     mean_reward, std_reward = evaluate_agent(agent=agent,
                                              evaluation_environment=environment,
                                              n_eval_episodes=N_EVALUATION_EPISODES,
                                              seeds=seeds)
     print(f"Mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
-    model_dictionary = {
-        "env_id": ENV_ID,
-        "max_steps": 99,
-        "n_training_episodes": N_TRAINING_EPISODES,
-        "n_eval_episodes": N_EVALUATION_EPISODES,
-        "eval_seed": seeds,
-        "learning_rate": LEARNING_RATE,
-        "gamma": DISCOUNT_FACTOR,
-        "max_epsilon": MAX_EPSILON,
-        "min_epsilon": MIN_EPSILON,
-        "qtable": agent.q_table
-    }
-
-    agent.upload_to_huggingface_hub(repository_id=REPO_ID,
-                                    environment=environment,
-                                    environment_name=ENV_ID,
-                                    evaluation_seeds=seeds,
-                                    model_dictionary=model_dictionary)
-
-    # agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="q-learning.pkl")
-
-    mean_reward, std_reward = evaluate_agent(agent=agent,
-                                             evaluation_environment=environment,
-                                             n_eval_episodes=N_EVALUATION_EPISODES,
-                                             seeds=seeds)
-
-    print(f"Mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
+    # model_dictionary = {
+    #     "env_id": ENV_ID,
+    #     "max_steps": 99,
+    #     "n_training_episodes": N_TRAINING_EPISODES,
+    #     "n_eval_episodes": N_EVALUATION_EPISODES,
+    #     "eval_seed": seeds,
+    #     "learning_rate": LEARNING_RATE,
+    #     "gamma": DISCOUNT_FACTOR,
+    #     "max_epsilon": MAX_EPSILON,
+    #     "min_epsilon": MIN_EPSILON,
+    #     "qtable": agent.q_table
+    # }
+    #
+    # agent.upload_to_huggingface_hub(repository_id=REPO_ID,
+    #                                 environment=environment,
+    #                                 environment_name=ENV_ID,
+    #                                 evaluation_seeds=seeds,
+    #                                 model_dictionary=model_dictionary)
