@@ -1,6 +1,6 @@
 import gym
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class Environment(ABC, gym.Env):
@@ -62,11 +62,38 @@ class Environment(ABC, gym.Env):
         raise NotImplementedError
 
     @abstractmethod
-    def reset(self) -> object:
-        """Resets the environment to an initial state and returns an initial observation.
+    def reset(self,
+              seed: Optional[int] = None,
+              return_info: bool = False,
+              options: Optional[dict] = None) -> object:
+        """ Resets the environment to an initial state and returns the initial observation.
+
+        This method can reset the environment's random number generator(s) if ``seed`` is an integer or
+        if the environment has not yet initialized a random number generator.
+        If the environment already has a random number generator and :meth:`reset` is called with ``seed=None``,
+        the RNG should not be reset. Moreover, :meth:`reset` should (in the typical use case) be called with an
+        integer seed right after initialization and then never again.
+
+        Args:
+            seed (optional int): The seed that is used to initialize the environment's PRNG.
+                If the environment does not already have a PRNG and ``seed=None`` (the default option) is passed,
+                a seed will be chosen from some source of entropy (e.g. timestamp or /dev/urandom).
+                However, if the environment already has a PRNG and ``seed=None`` is passed, the PRNG will *not* be reset.
+                If you pass an integer, the PRNG will be reset even if it already exists.
+                Usually, you want to pass an integer *right after the environment has been initialized and then never again*.
+                Please refer to the minimal example above to see this paradigm in action.
+            return_info (bool): If true, return additional information along with initial observation.
+                This info should be analogous to the info returned in :meth:`step`
+            options (optional dict): Additional information to specify how the environment is reset (optional,
+                depending on the specific environment)
+
 
         Returns:
-            observation (object): the initial observation.
+            observation (object): Observation of the initial state. This will be an element of :attr:`observation_space`
+                (typically a numpy array) and is analogous to the observation returned by :meth:`step`.
+            info (optional dictionary): This will *only* be returned if ``return_info=True`` is passed.
+                It contains auxiliary information complementing ``observation``. This dictionary should be analogous to
+                the ``info`` returned by :meth:`step`.
         """
         raise NotImplementedError
 
