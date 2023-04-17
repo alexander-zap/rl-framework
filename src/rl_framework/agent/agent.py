@@ -2,16 +2,16 @@ from abc import ABC, abstractmethod
 
 
 class Agent(ABC):
-    @property
-    def model(self):
-        raise NotImplementedError
-
     @abstractmethod
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def train(self, *args, **kwargs):
+    def train(self, training_environments, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def choose_action(self, observation, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
