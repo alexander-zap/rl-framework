@@ -2,8 +2,8 @@
 This is a wrapper Environment class for Gym environments.
 """
 
-from typing import Tuple, Text
 import gym
+from typing import Tuple, Text, Optional
 from rl_framework.environment import Environment
 
 
@@ -58,14 +58,14 @@ class GymEnvironmentWrapper(Environment):
     def reward_range(self, value):
         self._reward_range = value
 
-    def __init__(self, environment_name: Text):
+    def __init__(self, environment_name: Text, *args, **kwargs):
         """
         Initialize the wrapping attributes of a Gym environment instance.
 
         Args:
             environment_name (Text): Name of the environment, as registered in Gym.
         """
-        self._gym_environment: gym.Env = gym.make(environment_name)
+        self._gym_environment: gym.Env = gym.make(environment_name, *args, **kwargs)
         self._action_space = self._gym_environment.action_space
         self._observation_space = self._gym_environment.observation_space
         self._reward_range = self._gym_environment.reward_range
@@ -91,7 +91,7 @@ class GymEnvironmentWrapper(Environment):
         """
         return self._gym_environment.step(action)
 
-    def reset(self) -> object:
+    def reset(self, seed: Optional[int] = None, *args, **kwargs) -> object:
         """
         Original Gym documentation:
 
@@ -106,8 +106,9 @@ class GymEnvironmentWrapper(Environment):
 
         Returns:
             observation (object): the initial observation.
+            seed (int): seed for seeded environment initialization.
         """
-        return self._gym_environment.reset()
+        return self._gym_environment.reset(seed=seed)
 
     def render(self, mode="human") -> None:
         """
