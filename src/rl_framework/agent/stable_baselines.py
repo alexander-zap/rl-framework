@@ -99,8 +99,9 @@ class StableBaselinesAgent(Agent):
 
         """
 
-        action, _ = self.model.predict(observation)
-        return action
+        # SB3 model expects multiple observations as input and will output an array of actions as output
+        action, _ = self.model.predict([observation], deterministic=True)
+        return action[0]
 
     def save(self, file_path: Text):
         """
