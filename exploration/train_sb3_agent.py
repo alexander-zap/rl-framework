@@ -14,7 +14,7 @@ COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {E
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [GymEnvironmentWrapper(ENV_ID) for _ in range(PARALLEL_ENVIRONMENTS)]
+    environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
@@ -34,12 +34,12 @@ if __name__ == "__main__":
         rl_algorithm_parameters={
             "policy": "MlpPolicy",
             "learning_rate": 0.001,
-            "n_steps": 1024,
+            # "n_steps": 1024,
             "batch_size": 64,
-            "n_epochs": 4,
+            # "n_epochs": 4,
             "gamma": 0.999,
-            "gae_lambda": 0.98,
-            "ent_coef": 0.01,
+            # "gae_lambda": 0.98,
+            # "ent_coef": 0.01,
             "verbose": 1
         }
     )
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         # Download existing agent from repository
         agent.download_from_huggingface_hub(
             repository_id=REPO_ID,
-            filename="PPO-LunarLander-v2.zip"
+            filename=f"{MODEL_NAME}.zip"
         )
     else:
         # Train agent
@@ -66,12 +66,11 @@ if __name__ == "__main__":
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 
     # # Upload the model
-    # upload_to_huggingface_hub(
-    #     agent_to_upload=agent,
-    #     evaluation_environment=environments[0],
-    #     model_name=MODEL_NAME,
-    #     model_architecture=MODEL_ARCHITECTURE,
-    #     environment_name=ENV_ID,
-    #     repository_id=REPO_ID,
-    #     commit_message=COMMIT_MESSAGE,
-    # )
+    agent.upload_to_huggingface_hub(
+        evaluation_environment=environments[0],
+        model_name=MODEL_NAME,
+        model_architecture=MODEL_ARCHITECTURE,
+        environment_name=ENV_ID,
+        repository_id=REPO_ID,
+        commit_message=COMMIT_MESSAGE,
+    )

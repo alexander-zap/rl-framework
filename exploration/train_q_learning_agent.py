@@ -21,7 +21,7 @@ MIN_EPSILON = 0.05
 
 if __name__ == "__main__":
     # Create environment
-    environment = GymEnvironmentWrapper(ENV_ID)
+    environment = GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array")
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
@@ -35,108 +35,7 @@ if __name__ == "__main__":
     print("\n _____REWARD RANGE_____ \n")
     print("Reward Range Interval", environment.reward_range)
 
-    seeds = [
-        16,
-        54,
-        165,
-        177,
-        191,
-        191,
-        120,
-        80,
-        149,
-        178,
-        48,
-        38,
-        6,
-        125,
-        174,
-        73,
-        50,
-        172,
-        100,
-        148,
-        146,
-        6,
-        25,
-        40,
-        68,
-        148,
-        49,
-        167,
-        9,
-        97,
-        164,
-        176,
-        61,
-        7,
-        54,
-        55,
-        161,
-        131,
-        184,
-        51,
-        170,
-        12,
-        120,
-        113,
-        95,
-        126,
-        51,
-        98,
-        36,
-        135,
-        54,
-        82,
-        45,
-        95,
-        89,
-        59,
-        95,
-        124,
-        9,
-        113,
-        58,
-        85,
-        51,
-        134,
-        121,
-        169,
-        105,
-        21,
-        30,
-        11,
-        50,
-        65,
-        12,
-        43,
-        82,
-        145,
-        152,
-        97,
-        106,
-        55,
-        31,
-        85,
-        38,
-        112,
-        102,
-        168,
-        123,
-        97,
-        21,
-        83,
-        158,
-        26,
-        80,
-        63,
-        5,
-        81,
-        32,
-        11,
-        28,
-        148,
-    ]
+    seeds = None
 
     # Create new agent
     agent = QLearningAgent(
@@ -162,21 +61,21 @@ if __name__ == "__main__":
                                              seeds=seeds)
     print(f"Mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
-    # model_dictionary = {
-    #     "env_id": ENV_ID,
-    #     "max_steps": 99,
-    #     "n_training_episodes": N_TRAINING_EPISODES,
-    #     "n_eval_episodes": N_EVALUATION_EPISODES,
-    #     "eval_seed": seeds,
-    #     "learning_rate": LEARNING_RATE,
-    #     "gamma": DISCOUNT_FACTOR,
-    #     "max_epsilon": MAX_EPSILON,
-    #     "min_epsilon": MIN_EPSILON,
-    #     "qtable": agent.q_table
-    # }
-    #
-    # agent.upload_to_huggingface_hub(repository_id=REPO_ID,
-    #                                 environment=environment,
-    #                                 environment_name=ENV_ID,
-    #                                 evaluation_seeds=seeds,
-    #                                 model_dictionary=model_dictionary)
+    model_dictionary = {
+        "env_id": ENV_ID,
+        "max_steps": 99,
+        "n_training_episodes": N_TRAINING_EPISODES,
+        "n_eval_episodes": N_EVALUATION_EPISODES,
+        "eval_seed": seeds,
+        "learning_rate": LEARNING_RATE,
+        "gamma": DISCOUNT_FACTOR,
+        "max_epsilon": MAX_EPSILON,
+        "min_epsilon": MIN_EPSILON,
+        "qtable": agent.q_table
+    }
+
+    agent.upload_to_huggingface_hub(repository_id=REPO_ID,
+                                    environment=environment,
+                                    environment_name=ENV_ID,
+                                    evaluation_seeds=seeds,
+                                    model_dictionary=model_dictionary)
