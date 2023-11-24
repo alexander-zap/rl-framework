@@ -1,6 +1,6 @@
-import gym
+import gymnasium as gym
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any, SupportsFloat
 
 
 class Environment(ABC, gym.Env):
@@ -37,13 +37,20 @@ class Environment(ABC, gym.Env):
         """
         raise NotImplementedError
 
+    @property
+    def render_mode(self):
+        """
+        A flag specifying which kind of rendering should be performed by the `.render` method
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         """Initialize the environment."""
         raise NotImplementedError
 
     @abstractmethod
-    def step(self, action) -> Tuple[object, float, bool, dict]:
+    def step(self, action) -> Tuple[object, SupportsFloat, bool, bool, dict]:
         """Run one timestep of the environment's dynamics. When end of
         episode is reached, you are responsible for calling `reset()`
         to reset this environment's state.
@@ -57,7 +64,13 @@ class Environment(ABC, gym.Env):
             Tuple consisting of following elements:
                 observation (object): agent's observation of the current environment
                 reward (float) : amount of reward returned after previous action
-                done (bool): whether the episode has ended, in which case further step() calls will return undefined results
+                terminated (bool): Whether the agent reaches the terminal state (as defined under the MDP of the task)
+                    which can be positive or negative.
+                    If true, the user needs to call .reset()
+                truncated (bool): Whether the truncation condition outside the scope of the MDP is satisfied.
+                    Typically, this is a timelimit, but could also be used to indicate an agent physically going out of
+                    bounds. Can be used to end the episode prematurely before a terminal state is reached.
+                    If true, the user needs to call .reset()
                 info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
         raise NotImplementedError
@@ -66,7 +79,7 @@ class Environment(ABC, gym.Env):
     def reset(self,
               seed: Optional[int] = None,
               return_info: bool = False,
-              options: Optional[dict] = None) -> object:
+              options: Optional[dict] = None) -> Tuple[object, dict[str, Any]]:
         """ Resets the environment to an initial state and returns the initial observation.
 
         This method can reset the environment's random number generator(s) if ``seed`` is an integer or
@@ -99,8 +112,10 @@ class Environment(ABC, gym.Env):
         raise NotImplementedError
 
     @abstractmethod
-    def render(self, mode="human"):
+    def render(self):
         """Renders the environment.
+
+        NOTE: Rendering mode is configured in self.render_mode since v26, so it should be set before calling .render()
 
         The set of supported modes varies per environment. (And some
         environments do not support rendering at all.) By convention,
@@ -120,20 +135,17 @@ class Environment(ABC, gym.Env):
               the list of supported modes. It's recommended to call super()
               in implementations to use the functionality of this method.
 
-        Args:
-            mode (str): the mode to render with
-
         Example:
 
         class MyEnv(Env):
             metadata = {'render.modes': ['human', 'rgb_array']}
 
-            def render(self, mode='human'):
-                if mode == 'rgb_array':
+            def render(self):
+                if self.render_mode == 'rgb_array':
                     return np.array(...) # return RGB frame suitable for video
-                elif mode == 'human':
+                elif self.render_mode == 'human':
                     ... # pop up a window and render
                 else:
-                    super(MyEnv, self).render(mode=mode) # just raise an exception
+                    super(MyEnv, self).render() # just raise an exception
         """
         raise NotImplementedError

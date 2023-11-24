@@ -12,7 +12,7 @@ from pathlib import Path
 import datetime
 import json
 import imageio
-import pickle5 as pickle
+import pickle
 from huggingface_hub import hf_hub_download
 
 
@@ -115,11 +115,12 @@ class QLearningAgent(Agent):
 
         for _ in tqdm(range(n_episodes)):
             episode_reward = 0
-            prev_observation = training_environment.reset()
+            prev_observation, _ = training_environment.reset()
             prev_action = choose_action_according_to_exploration_exploitation_strategy(prev_observation)
 
             while True:
-                observation, reward, done, info = training_environment.step(prev_action)
+                observation, reward, terminated, truncated, info = training_environment.step(prev_action)
+                done = terminated or truncated
                 action = choose_action_according_to_exploration_exploitation_strategy(observation)
                 episode_reward += reward
                 self._update_q_table(prev_observation, prev_action, observation, reward)
@@ -176,14 +177,15 @@ class QLearningAgent(Agent):
 
             images = []
             done = False
-            state = env.reset()
-            img = env.render(mode="rgb_array")
+            state, _ = env.reset()
+            img = env.render()
             images.append(img)
             while not done:
                 # Take the action (index) that have the maximum expected future reward given that state
                 action = agent.choose_action(state)
-                state, reward, done, info = env.step(action)  # We directly put next_state = state for recording logic
-                img = env.render(mode="rgb_array")
+                state, reward, terminated, truncated, info = env.step(action)  # We directly put next_state = state for recording logic
+                done = terminated or truncated
+                img = env.render()
                 images.append(img)
             imageio.mimsave(out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps)
 
