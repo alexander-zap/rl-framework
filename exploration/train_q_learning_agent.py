@@ -1,4 +1,4 @@
-from rl_framework.agent.q_learning import QLearningAgent
+from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.util.util import evaluate_agent
 
@@ -38,15 +38,16 @@ if __name__ == "__main__":
     seeds = None
 
     # Create new agent
-    agent = QLearningAgent(
-        alpha=LEARNING_RATE,
-        gamma=DISCOUNT_FACTOR,
-        epsilon=MAX_EPSILON,
-        epsilon_min=MIN_EPSILON,
-        n_actions=environment.action_space.n,
-        n_observations=environment.observation_space.n,
-        randomize_q_table=False,
-    )
+    algorithm_parameters = {
+        "alpha": LEARNING_RATE,
+        "gamma": DISCOUNT_FACTOR,
+        "epsilon": MAX_EPSILON,
+        "epsilon_min": MIN_EPSILON,
+        "n_actions": environment.action_space.n,
+        "n_observations": environment.observation_space.n,
+        "randomize_q_table": False,
+    }
+    agent = CustomAgent(algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters)
 
     if DOWNLOAD_EXISTING_AGENT:
         agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="q-learning.pkl")
@@ -71,7 +72,7 @@ if __name__ == "__main__":
         "gamma": DISCOUNT_FACTOR,
         "max_epsilon": MAX_EPSILON,
         "min_epsilon": MIN_EPSILON,
-        "qtable": agent.q_table
+        "qtable": agent.algorithm.q_table
     }
 
     agent.upload_to_huggingface_hub(repository_id=REPO_ID,

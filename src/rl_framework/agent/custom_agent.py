@@ -1,11 +1,6 @@
 from rl_framework.agent import Agent
-from rl_framework.environment import Environment
-from rl_framework.util import evaluate_agent
-from typing import Text, List, Optional, Dict
-import numpy as np
-import random
-from tqdm import tqdm
-import logging
+from enum import Enum
+from .custom_algorithms import QLearningAgent
 from huggingface_hub import HfApi, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 from pathlib import Path
@@ -14,59 +9,54 @@ import json
 import imageio
 import pickle
 from huggingface_hub import hf_hub_download
+from rl_framework.environment import Environment
+from rl_framework.util import evaluate_agent
+from typing import Text, List, Optional, Dict
 
 
-class QLearningAgent(Agent):
-    @property
-    def q_table(self):
-        return self._q_table
+class CustomAlgorithm(Enum):
+    Q_LEARNING = QLearningAgent
 
-    @q_table.setter
-    def q_table(self, value):
-        self._q_table = value
 
-    def __init__(self, n_actions: int, n_observations: int, alpha: float = 0.1, gamma: float = 0.95,
-                 epsilon: float = 1.0, epsilon_min: float = 0.05, randomize_q_table: bool = True):
+class CustomAgent(Agent):
+    def __init__(
+        self,
+        algorithm: CustomAlgorithm = CustomAlgorithm.Q_LEARNING,
+        algorithm_parameters: Dict = None,
+    ):
         """
-        Initialize an Q-Learning agent which will be trained.
-        """
-        self.alpha = alpha
-        self.gamma = gamma
-        self.epsilon = epsilon
-        self.epsilon_min = epsilon_min
-        self.n_actions = n_actions
-
-        if randomize_q_table:
-            self.q_table = np.random.random_sample((n_observations, n_actions)) * 0.1
-        else:
-            self.q_table = np.full((n_observations, n_actions), 0.0)
-
-    def _update_q_table(self, prev_observation: object, prev_action: int, observation: object, reward: float):
-        """
-        Update _q_table based on previous observation, previous action, new observation and received reward
+        Initialize an agent which will trained on one of custom implemented algorithms.
 
         Args:
-            prev_observation (object): Previous observation (St)
-            prev_action (in): Previous action (at)
-            observation (object): New observation (St+1) after executing action at in state St
-            reward (float): Reward for executing action at in state St
-
+            algorithm (CustomAlgorithm): Enum with values being custom implemented Algorithm classes (Types).
+                Specifies the algorithm for RL training.
+                Defaults to Q-Learning.
+            algorithm_parameters (Dict): Parameters / keyword arguments for the specified Algorithm class.
         """
-        q_old = self._q_table[prev_observation, prev_action]
-        q_new = (1 - self.alpha) * q_old + self.alpha * (reward + self.gamma * np.max(self._q_table[observation]))
-        self._q_table[prev_observation, prev_action] = q_new
 
-    def _update_epsilon(self, n_episodes: int):
+        algorithm_class = algorithm.value
+
+        if algorithm_parameters is None:
+            algorithm_parameters = {}
+
+        self.algorithm = algorithm_class(**algorithm_parameters)
+
+    def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
         """
-        Gradually reduce epsilon after every done episode
+        Train the instantiated agent on the environment.
+
+        This training is done by using the agent-on-environment training method provided by the custom algorithm.
 
         Args:
-            n_episodes (int): Number of episodes (information required to reduce epsilon steadily.
-
+            training_environments (List[Environment): Environment on which the agent should be trained on.
+                If n_environments is set above 1, multiple environments enables parallel training of an agent.
+            total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
         """
-        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
-    def choose_action(self, observation: object, *args, **kwargs) -> int:
+        self.algorithm.train(training_environments=training_environments, total_timesteps=total_timesteps, *args,
+                             **kwargs)
+
+    def choose_action(self, observation: object, *args, **kwargs):
         """
         Chooses action which the agent will perform next, according to the observed environment.
 
@@ -77,60 +67,7 @@ class QLearningAgent(Agent):
 
         """
 
-        return np.argmax(self._q_table[observation])
-
-    # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
-    #   Pass exploration-exploitation strategy from outside
-    def train(self, training_environments: List[Environment], n_episodes: int = 10000, *args, **kwargs):
-        """
-        Train the instantiated agent on the environment.
-
-        This training is done by using the Q-Learning method.
-
-        The Q-table is changed in place, therefore the updated Q-table can be accessed in the `.q_table` attribute
-        after the agent has been trained.
-
-        Args:
-            training_environments (List[Environment]): List of environments on which the agent should be trained on.
-                # NOTE: This class only supports training on one environment
-            n_episodes (int): Number of episodes the agent should train for before terminating the training.
-        """
-
-        def choose_action_according_to_exploration_exploitation_strategy(obs):
-            greedy_action = self.choose_action(obs)
-            # Choose random action with probability epsilon
-            if random.random() < self.epsilon:
-                return random.randrange(self.n_actions)
-            # Greedy action is chosen with probability (1 - epsilon)
-            else:
-                return greedy_action
-
-        if len(training_environments) > 1:
-            logging.info(
-                f"Reinforcement Learning algorithm {self.__class__.__qualname__} does not support "
-                f"training on multiple environments in parallel. Continuing with one environment as "
-                f"training environment.")
-
-        training_environment = training_environments[0]
-
-        for _ in tqdm(range(n_episodes)):
-            episode_reward = 0
-            prev_observation, _ = training_environment.reset()
-            prev_action = choose_action_according_to_exploration_exploitation_strategy(prev_observation)
-
-            while True:
-                observation, reward, terminated, truncated, info = training_environment.step(prev_action)
-                done = terminated or truncated
-                action = choose_action_according_to_exploration_exploitation_strategy(observation)
-                episode_reward += reward
-                self._update_q_table(prev_observation, prev_action, observation, reward)
-
-                prev_observation = observation
-                prev_action = action
-
-                if done:
-                    self._update_epsilon(n_episodes)
-                    break
+        return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
     def save(self, file_path: Text):
         """
@@ -139,7 +76,7 @@ class QLearningAgent(Agent):
         Args:
             file_path (Text): Path where the model should be saved to.
         """
-        raise NotImplementedError
+        self.algorithm.save(file_path)
 
     def upload_to_huggingface_hub(self,
                                   repository_id: Text,
@@ -183,7 +120,8 @@ class QLearningAgent(Agent):
             while not done:
                 # Take the action (index) that have the maximum expected future reward given that state
                 action = agent.choose_action(state)
-                state, reward, terminated, truncated, info = env.step(action)  # We directly put next_state = state for recording logic
+                state, reward, terminated, truncated, info = env.step(
+                    action)  # We directly put next_state = state for recording logic
                 done = terminated or truncated
                 img = env.render()
                 images.append(img)
@@ -312,6 +250,7 @@ class QLearningAgent(Agent):
         with open(pickle_model, "rb") as f:
             downloaded_model_file = pickle.load(f)
 
+        # FIXME: Only works for QLearning
+        # FIXME: only with correct uploaded model_dictionary (upload format currently hard-coded in main.py)
         q_table = downloaded_model_file["qtable"]
-
-        self.q_table = q_table
+        self.algorithm.q_table = q_table
