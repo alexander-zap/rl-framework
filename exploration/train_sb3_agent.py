@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     # Create new agent
     agent = StableBaselinesAgent(
-        rl_algorithm=StableBaselinesAlgorithm.PPO,
-        rl_algorithm_parameters={
+        stable_baselines_algorithm=StableBaselinesAlgorithm.PPO,
+        algorithm_parameters={
             "policy": "MlpPolicy",
             "learning_rate": 0.001,
             # "n_steps": 1024,

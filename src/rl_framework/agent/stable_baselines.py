@@ -22,46 +22,40 @@ class StableBaselinesAlgorithm(Enum):
 
 class StableBaselinesAgent(Agent):
     @property
-    def model(self):
-        return self._model
+    def algorithm(self):
+        return self._algorithm
 
-    @model.setter
-    def model(self, value):
-        self._model = value
+    @algorithm.setter
+    def algorithm(self, value):
+        self._algorithm = value
 
     def __init__(
         self,
-        rl_algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
-        rl_algorithm_parameters: Dict = None,
-        pretrained_model: Optional[BaseAlgorithm] = None,
+        stable_baselines_algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
+        algorithm_parameters: Dict = None
     ):
         """
         Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
 
         Args:
-            rl_algorithm (StableBaselinesAlgorithm): Enum with values being SB3 RL Algorithm classes (Types).
+            stable_baselines_algorithm (StableBaselinesAlgorithm): Enum with values being SB3 RL Algorithm classes.
                 Specifies the algorithm for RL training.
                 Defaults to PPO.
-            rl_algorithm_parameters (Dict): Parameters / keyword arguments for the specified SB3 RL Algorithm class.
+            algorithm_parameters (Dict): Parameters / keyword arguments for the specified SB3 RL Algorithm class.
                 See https://stable-baselines3.readthedocs.io/en/master/modules/base.html for details on common params.
                 See individual docs (e.g., https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
                 for algorithm-specific params.
-            pretrained_model (BaseAlgorithm): Pretrained SB3 model.
-                This variable is mainly used for loading previously saved models.
         """
 
-        self.sb3_algorithm = rl_algorithm.value
-        self.model = pretrained_model
+        self.sb3_algorithm_class = stable_baselines_algorithm.value
 
-        if rl_algorithm_parameters is None:
-            rl_algorithm_parameters = {
-                "policy": "MlpPolicy",
-                "learning_rate": 0.001,
-            }
+        if algorithm_parameters is None:
+            algorithm_parameters = {"policy": "MlpPolicy"}
 
-        self._model_builder = partial(
-            self.sb3_algorithm,
-            **rl_algorithm_parameters
+        self.algorithm = None
+        self._algorithm_builder = partial(
+            self.sb3_algorithm_class,
+            **algorithm_parameters
         )
 
     def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
@@ -84,9 +78,9 @@ class StableBaselinesAgent(Agent):
             lambda: next(environment_iterator), n_envs=len(training_environments)
         )
 
-        self.model = self._model_builder(env=training_env)
+        self.algorithm = self._algorithm_builder(env=training_env)
 
-        self.model.learn(total_timesteps=total_timesteps)
+        self.algorithm.learn(total_timesteps=total_timesteps)
 
     def choose_action(self, observation: object, *args, **kwargs):
         """
@@ -100,17 +94,17 @@ class StableBaselinesAgent(Agent):
         """
 
         # SB3 model expects multiple observations as input and will output an array of actions as output
-        action, _ = self.model.predict([observation], deterministic=True)
+        action, _ = self.algorithm.predict([observation], deterministic=True)
         return action[0]
 
     def save(self, file_path: Text):
         """
-        Save the model of the agent to a zipped file.
+        Save the algorithm of the agent.
 
         Args:
-            file_path (Text): Path where the model should be saved to.
+            file_path (Text): Path where the algorithm should be saved to.
         """
-        self.model.save(file_path)
+        self.algorithm.save(file_path)
 
     def upload_to_huggingface_hub(
         self,
@@ -141,7 +135,7 @@ class StableBaselinesAgent(Agent):
             [lambda: evaluation_environment]
         )
 
-        model = self.model
+        model = self.algorithm
         package_to_hub(
             model=model,
             model_name=model_name,
@@ -164,11 +158,7 @@ class StableBaselinesAgent(Agent):
 
         """
 
-        # When the model was trained on Python 3.8 the pickle protocol is 5
-        # But Python 3.6, 3.7 use protocol 4
-        # In order to get compatibility we need to:
-        # 1. Install pickle5
-        # 2. Create a custom empty object we pass as parameter to PPO.load()
+        # TODO: This breaks possibility of fine-tuning a downloaded model.
         custom_objects = {
             "learning_rate": 0.0,
             "lr_schedule": lambda _: 0.0,
@@ -176,7 +166,7 @@ class StableBaselinesAgent(Agent):
         }
 
         checkpoint = load_from_hub(repository_id, filename)
-        model = self.sb3_algorithm.load(
+        algorithm = self.sb3_algorithm_class.load(
             checkpoint, custom_objects=custom_objects, print_system_info=True
         )
-        self.model = model
+        self.algorithm = algorithm
