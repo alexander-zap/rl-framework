@@ -1,6 +1,6 @@
 from rl_framework.agent import Agent
 from enum import Enum
-from .custom_algorithms import QLearningAgent
+from .custom_algorithms import QLearning
 from huggingface_hub import HfApi, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 from pathlib import Path
@@ -12,10 +12,11 @@ from huggingface_hub import hf_hub_download
 from rl_framework.environment import Environment
 from rl_framework.util import evaluate_agent
 from typing import Text, List, Optional, Dict
+import numpy as np
 
 
 class CustomAlgorithm(Enum):
-    Q_LEARNING = QLearningAgent
+    Q_LEARNING = QLearning
 
 
 class CustomAgent(Agent):
@@ -103,7 +104,7 @@ class CustomAgent(Agent):
             video_fps (int): How many frame per seconds to record the video replay.
         """
 
-        def record_video(env: Environment, agent: QLearningAgent, out_directory: Path, fps: int = 1):
+        def record_video(env: Environment, out_directory: Path, fps: int = 1):
             """
             Generate a replay video of the agent.
                 env (Environment): Environment used for final evaluation and clip creation before upload.
@@ -119,7 +120,7 @@ class CustomAgent(Agent):
             images.append(img)
             while not done:
                 # Take the action (index) that have the maximum expected future reward given that state
-                action = agent.choose_action(state)
+                action = self.choose_action(state)
                 state, reward, terminated, truncated, info = env.step(
                     action)  # We directly put next_state = state for recording logic
                 done = terminated or truncated
@@ -214,8 +215,8 @@ class CustomAgent(Agent):
         metadata_save(readme_path, metadata)
 
         # Step 6: Record a video
-        # video_path = repo_local_path / "replay.mp4"
-        # record_video(env=environment, agent=agent_to_upload, out_directory=video_path, fps=video_fps)
+        video_path = repo_local_path / "replay.mp4"
+        record_video(env=environment, out_directory=video_path, fps=video_fps)
 
         # Step 7. Push everything to the Hub
         api.upload_folder(

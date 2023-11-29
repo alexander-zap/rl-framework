@@ -8,7 +8,7 @@ import logging
 from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
 
 
-class QLearningAgent(Algorithm):
+class QLearning(Algorithm):
     @property
     def q_table(self):
         return self._q_table
