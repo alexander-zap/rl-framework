@@ -1,18 +1,20 @@
-from rl_framework.agent import Agent
-from enum import Enum
-from .custom_algorithms import QLearning
-from huggingface_hub import HfApi, snapshot_download
-from huggingface_hub.repocard import metadata_eval_result, metadata_save
-from pathlib import Path
 import datetime
 import json
-import imageio
 import pickle
-from huggingface_hub import hf_hub_download
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional, Text
+
+import imageio
+import numpy as np
+from huggingface_hub import HfApi, hf_hub_download, snapshot_download
+from huggingface_hub.repocard import metadata_eval_result, metadata_save
+
+from rl_framework.agent import Agent
 from rl_framework.environment import Environment
 from rl_framework.util import evaluate_agent
-from typing import Text, List, Optional, Dict
-import numpy as np
+
+from .custom_algorithms import QLearning
 
 
 class CustomAlgorithm(Enum):
@@ -42,7 +44,13 @@ class CustomAgent(Agent):
 
         self.algorithm = algorithm_class(**algorithm_parameters)
 
-    def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
+    def train(
+        self,
+        training_environments: List[Environment],
+        total_timesteps: int = 100000,
+        *args,
+        **kwargs,
+    ):
         """
         Train the instantiated agent on the environment.
 
@@ -54,8 +62,12 @@ class CustomAgent(Agent):
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
         """
 
-        self.algorithm.train(training_environments=training_environments, total_timesteps=total_timesteps, *args,
-                             **kwargs)
+        self.algorithm.train(
+            training_environments=training_environments,
+            total_timesteps=total_timesteps,
+            *args,
+            **kwargs,
+        )
 
     def choose_action(self, observation: object, *args, **kwargs):
         """
@@ -70,13 +82,17 @@ class CustomAgent(Agent):
 
         return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
-    def upload_to_huggingface_hub(self,
-                                  repository_id: Text,
-                                  environment: Environment,
-                                  environment_name: Text,
-                                  model_dictionary: Dict,
-                                  evaluation_seeds: Optional[List[int]] = None,
-                                  video_fps: int = 1):
+    # TODO: Implement upload/download as adapters; support ClearML
+
+    def upload_to_huggingface_hub(
+        self,
+        repository_id: Text,
+        environment: Environment,
+        environment_name: Text,
+        model_dictionary: Dict,
+        evaluation_seeds: Optional[List[int]] = None,
+        video_fps: int = 1,
+    ):
         """
         Evaluate, Generate a video and Upload a model to Hugging Face Hub.
         This method does the complete pipeline:
@@ -113,11 +129,14 @@ class CustomAgent(Agent):
                 # Take the action (index) that have the maximum expected future reward given that state
                 action = self.choose_action(state)
                 state, reward, terminated, truncated, info = env.step(
-                    action)  # We directly put next_state = state for recording logic
+                    action
+                )  # We directly put next_state = state for recording logic
                 done = terminated or truncated
                 img = env.render()
                 images.append(img)
-            imageio.mimsave(out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps)
+            imageio.mimsave(
+                out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps
+            )
 
         _, repo_name = repository_id.split("/")
 
@@ -140,8 +159,10 @@ class CustomAgent(Agent):
 
         # Step 4: Evaluate the model and build JSON with evaluation metrics
         mean_reward, std_reward = evaluate_agent(
-            agent=self, evaluation_environment=eval_env, n_eval_episodes=model_dictionary["n_eval_episodes"],
-            seeds=evaluation_seeds
+            agent=self,
+            evaluation_environment=eval_env,
+            n_eval_episodes=model_dictionary["n_eval_episodes"],
+            seeds=evaluation_seeds,
         )
 
         evaluate_data = {
@@ -216,7 +237,9 @@ class CustomAgent(Agent):
             path_in_repo=".",
         )
 
-        print("Your model is pushed to the Hub. You can view your model here: ", repo_url)
+        print(
+            "Your model is pushed to the Hub. You can view your model here: ", repo_url
+        )
 
     def download_from_huggingface_hub(self, repository_id: Text):
         """

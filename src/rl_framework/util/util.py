@@ -1,10 +1,15 @@
-from typing import Optional, List
+from typing import List, Optional
+
 import numpy as np
 from tqdm import tqdm
 
 
-def evaluate_agent(agent, evaluation_environment, n_eval_episodes: int,
-                   seeds: Optional[List[int]] = None):
+def evaluate_agent(
+    agent,
+    evaluation_environment,
+    n_eval_episodes: int,
+    seeds: Optional[List[int]] = None,
+):
     """
     Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
     Args:
@@ -25,7 +30,13 @@ def evaluate_agent(agent, evaluation_environment, n_eval_episodes: int,
         prev_action = agent.choose_action(prev_observation, greedy=True)
 
         while True:
-            observation, reward, terminated, truncated, info = evaluation_environment.step(prev_action)
+            (
+                observation,
+                reward,
+                terminated,
+                truncated,
+                info,
+            ) = evaluation_environment.step(prev_action)
             done = terminated or truncated
             # next action to be executed (based on new observation)
             action = agent.choose_action(observation, greedy=True)

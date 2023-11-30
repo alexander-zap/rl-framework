@@ -1,6 +1,7 @@
-import gymnasium as gym
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, Any, SupportsFloat
+from typing import Any, Optional, SupportsFloat, Tuple
+
+import gymnasium as gym
 
 
 class Environment(ABC, gym.Env):
@@ -76,11 +77,13 @@ class Environment(ABC, gym.Env):
         raise NotImplementedError
 
     @abstractmethod
-    def reset(self,
-              seed: Optional[int] = None,
-              return_info: bool = False,
-              options: Optional[dict] = None) -> Tuple[object, dict[str, Any]]:
-        """ Resets the environment to an initial state and returns the initial observation.
+    def reset(
+        self,
+        seed: Optional[int] = None,
+        return_info: bool = False,
+        options: Optional[dict] = None,
+    ) -> Tuple[object, dict[str, Any]]:
+        """Resets the environment to an initial state and returns the initial observation.
 
         This method can reset the environment's random number generator(s) if ``seed`` is an integer or
         if the environment has not yet initialized a random number generator.

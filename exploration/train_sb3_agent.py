@@ -1,6 +1,9 @@
-from rl_framework.util import evaluate_agent
-from rl_framework.agent.stable_baselines import StableBaselinesAgent, StableBaselinesAlgorithm
+from rl_framework.agent.stable_baselines import (
+    StableBaselinesAgent,
+    StableBaselinesAlgorithm,
+)
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
+from rl_framework.util import evaluate_agent
 
 ENV_ID = "LunarLander-v2"
 MODEL_ARCHITECTURE = "PPO"
@@ -14,7 +17,10 @@ COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {E
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
+    environments = [
+        GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array")
+        for _ in range(PARALLEL_ENVIRONMENTS)
+    ]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
@@ -40,15 +46,14 @@ if __name__ == "__main__":
             "gamma": 0.999,
             # "gae_lambda": 0.98,
             # "ent_coef": 0.01,
-            "verbose": 1
-        }
+            "verbose": 1,
+        },
     )
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
         agent.download_from_huggingface_hub(
-            repository_id=REPO_ID,
-            filename=f"{MODEL_NAME}.zip"
+            repository_id=REPO_ID, filename=f"{MODEL_NAME}.zip"
         )
     else:
         # Train agent
@@ -59,9 +64,7 @@ if __name__ == "__main__":
 
     # Evaluate the model
     mean_reward, std_reward = evaluate_agent(
-        agent=agent,
-        evaluation_environment=environments[0],
-        n_eval_episodes=100
+        agent=agent, evaluation_environment=environments[0], n_eval_episodes=100
     )
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 

@@ -2,8 +2,10 @@
 This is a wrapper Environment class for Gym environments.
 """
 
+from typing import Any, Optional, SupportsFloat, Text, Tuple
+
 import gymnasium as gym
-from typing import Tuple, Text, Optional, Any, SupportsFloat
+
 from rl_framework.environment import Environment
 
 
@@ -67,7 +69,9 @@ class GymEnvironmentWrapper(Environment):
     def render_mode(self, value):
         self._render_mode = value
 
-    def __init__(self, environment_name: Text, render_mode: Text = None, *args, **kwargs):
+    def __init__(
+        self, environment_name: Text, render_mode: Text = None, *args, **kwargs
+    ):
         """
         Initialize the wrapping attributes of a Gym environment instance.
 
@@ -75,54 +79,58 @@ class GymEnvironmentWrapper(Environment):
             environment_name (Text): Name of the environment, as registered in Gym.
             render_mode (Text): Mode for environment .render method (see .render-method for possible modes)
         """
-        self._gym_environment: gym.Env = gym.make(environment_name, render_mode=render_mode, *args, **kwargs)
+        self._gym_environment: gym.Env = gym.make(
+            environment_name, render_mode=render_mode, *args, **kwargs
+        )
         self._action_space = self._gym_environment.action_space
         self._observation_space = self._gym_environment.observation_space
         self._reward_range = self._gym_environment.reward_range
         self._render_mode = self._gym_environment.render_mode
 
     def step(self, action: object) -> Tuple[object, SupportsFloat, bool, bool, dict]:
-        """ Original Gym documentation:
+        """Original Gym documentation:
 
-       Run one timestep of the environment's dynamics using the agent actions.
+        Run one timestep of the environment's dynamics using the agent actions.
 
-        When the end of an episode is reached (``terminated or truncated``), it is necessary to call :meth:`reset` to
-        reset this environment's state for the next episode.
+         When the end of an episode is reached (``terminated or truncated``), it is necessary to call :meth:`reset` to
+         reset this environment's state for the next episode.
 
-        .. versionchanged:: 0.26
+         .. versionchanged:: 0.26
 
-            The Step API was changed removing ``done`` in favor of ``terminated`` and ``truncated`` to make it clearer
-            to users when the environment had terminated or truncated which is critical for reinforcement learning
-            bootstrapping algorithms.
+             The Step API was changed removing ``done`` in favor of ``terminated`` and ``truncated`` to make it clearer
+             to users when the environment had terminated or truncated which is critical for reinforcement learning
+             bootstrapping algorithms.
 
-        Args:
-            action (ActType): an action provided by the agent to update the environment state.
+         Args:
+             action (ActType): an action provided by the agent to update the environment state.
 
-        Returns:
-            observation (ObsType): An element of the environment's :attr:`observation_space` as the next observation due to the agent actions.
-                An example is a numpy array containing the positions and velocities of the pole in CartPole.
-            reward (SupportsFloat): The reward as a result of taking the action.
-            terminated (bool): Whether the agent reaches the terminal state (as defined under the MDP of the task)
-                which can be positive or negative. An example is reaching the goal state or moving into the lava from
-                the Sutton and Barton, Gridworld. If true, the user needs to call :meth:`reset`.
-            truncated (bool): Whether the truncation condition outside the scope of the MDP is satisfied.
-                Typically, this is a timelimit, but could also be used to indicate an agent physically going out of bounds.
-                Can be used to end the episode prematurely before a terminal state is reached.
-                If true, the user needs to call :meth:`reset`.
-            info (dict): Contains auxiliary diagnostic information (helpful for debugging, learning, and logging).
-                This might, for instance, contain: metrics that describe the agent's performance state, variables that are
-                hidden from observations, or individual reward terms that are combined to produce the total reward.
-                In OpenAI Gym <v26, it contains "TimeLimit.truncated" to distinguish truncation and termination,
-                however this is deprecated in favour of returning terminated and truncated variables.
-            done (bool): (Deprecated) A boolean value for if the episode has ended, in which case further :meth:`step` calls will
-                return undefined results. This was removed in OpenAI Gym v26 in favor of terminated and truncated attributes.
-                A done signal may be emitted for different reasons: Maybe the task underlying the environment was solved successfully,
-                a certain timelimit was exceeded, or the physics simulation has entered an invalid state.
+         Returns:
+             observation (ObsType): An element of the environment's :attr:`observation_space` as the next observation due to the agent actions.
+                 An example is a numpy array containing the positions and velocities of the pole in CartPole.
+             reward (SupportsFloat): The reward as a result of taking the action.
+             terminated (bool): Whether the agent reaches the terminal state (as defined under the MDP of the task)
+                 which can be positive or negative. An example is reaching the goal state or moving into the lava from
+                 the Sutton and Barton, Gridworld. If true, the user needs to call :meth:`reset`.
+             truncated (bool): Whether the truncation condition outside the scope of the MDP is satisfied.
+                 Typically, this is a timelimit, but could also be used to indicate an agent physically going out of bounds.
+                 Can be used to end the episode prematurely before a terminal state is reached.
+                 If true, the user needs to call :meth:`reset`.
+             info (dict): Contains auxiliary diagnostic information (helpful for debugging, learning, and logging).
+                 This might, for instance, contain: metrics that describe the agent's performance state, variables that are
+                 hidden from observations, or individual reward terms that are combined to produce the total reward.
+                 In OpenAI Gym <v26, it contains "TimeLimit.truncated" to distinguish truncation and termination,
+                 however this is deprecated in favour of returning terminated and truncated variables.
+             done (bool): (Deprecated) A boolean value for if the episode has ended, in which case further :meth:`step` calls will
+                 return undefined results. This was removed in OpenAI Gym v26 in favor of terminated and truncated attributes.
+                 A done signal may be emitted for different reasons: Maybe the task underlying the environment was solved successfully,
+                 a certain timelimit was exceeded, or the physics simulation has entered an invalid state.
         """
         return self._gym_environment.step(action)
 
-    def reset(self, seed: Optional[int] = None, *args, **kwargs) -> Tuple[object, dict[str, Any]]:
-        """ Original Gym documentation:
+    def reset(
+        self, seed: Optional[int] = None, *args, **kwargs
+    ) -> Tuple[object, dict[str, Any]]:
+        """Original Gym documentation:
 
         Resets the environment to an initial internal state, returning an initial observation and info.
 
@@ -160,7 +168,7 @@ class GymEnvironmentWrapper(Environment):
         return self._gym_environment.reset(seed=seed)
 
     def render(self) -> None:
-        """ Original Gym documentation:
+        """Original Gym documentation:
 
         Compute the render frames as specified by :attr:`render_mode` during the initialization of the environment.
 

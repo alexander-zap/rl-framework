@@ -1,12 +1,13 @@
-from rl_framework.environment import Environment
-from typing import Text, List
-import numpy as np
-import random
-from tqdm import tqdm
 import logging
 import pickle
+import random
+from typing import List, Text
+
+import numpy as np
+from tqdm import tqdm
 
 from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
+from rl_framework.environment import Environment
 
 
 class QLearning(Algorithm):
@@ -18,8 +19,16 @@ class QLearning(Algorithm):
     def q_table(self, value):
         self._q_table = value
 
-    def __init__(self, n_actions: int, n_observations: int, alpha: float = 0.1, gamma: float = 0.95,
-                 epsilon: float = 1.0, epsilon_min: float = 0.05, randomize_q_table: bool = True):
+    def __init__(
+        self,
+        n_actions: int,
+        n_observations: int,
+        alpha: float = 0.1,
+        gamma: float = 0.95,
+        epsilon: float = 1.0,
+        epsilon_min: float = 0.05,
+        randomize_q_table: bool = True,
+    ):
         """
         Initialize an Q-Learning agent which will be trained.
         """
@@ -34,7 +43,13 @@ class QLearning(Algorithm):
         else:
             self.q_table = np.full((n_observations, n_actions), 0.0)
 
-    def _update_q_table(self, prev_observation: object, prev_action: int, observation: object, reward: float):
+    def _update_q_table(
+        self,
+        prev_observation: object,
+        prev_action: int,
+        observation: object,
+        reward: float,
+    ):
         """
         Update _q_table based on previous observation, previous action, new observation and received reward
 
@@ -46,7 +61,9 @@ class QLearning(Algorithm):
 
         """
         q_old = self._q_table[prev_observation, prev_action]
-        q_new = (1 - self.alpha) * q_old + self.alpha * (reward + self.gamma * np.max(self._q_table[observation]))
+        q_new = (1 - self.alpha) * q_old + self.alpha * (
+            reward + self.gamma * np.max(self._q_table[observation])
+        )
         self._q_table[prev_observation, prev_action] = q_new
 
     def _update_epsilon(self, n_episodes: int):
@@ -57,7 +74,11 @@ class QLearning(Algorithm):
             n_episodes (int): Number of episodes (information required to reduce epsilon steadily.
 
         """
-        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
+        self.epsilon = (
+            self.epsilon - 2 / n_episodes
+            if self.epsilon > self.epsilon_min
+            else self.epsilon_min
+        )
 
     def choose_action(self, observation: object, *args, **kwargs) -> int:
         """
@@ -74,7 +95,13 @@ class QLearning(Algorithm):
 
     # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
     #   Pass exploration-exploitation strategy from outside
-    def train(self, training_environments: List[Environment], n_episodes: int = 10000, *args, **kwargs):
+    def train(
+        self,
+        training_environments: List[Environment],
+        n_episodes: int = 10000,
+        *args,
+        **kwargs,
+    ):
         """
         Train the instantiated agent on the environment.
 
@@ -102,19 +129,30 @@ class QLearning(Algorithm):
             logging.info(
                 f"Reinforcement Learning algorithm {self.__class__.__qualname__} does not support "
                 f"training on multiple environments in parallel. Continuing with one environment as "
-                f"training environment.")
+                f"training environment."
+            )
 
         training_environment = training_environments[0]
 
         for _ in tqdm(range(n_episodes)):
             episode_reward = 0
             prev_observation, _ = training_environment.reset()
-            prev_action = choose_action_according_to_exploration_exploitation_strategy(prev_observation)
+            prev_action = choose_action_according_to_exploration_exploitation_strategy(
+                prev_observation
+            )
 
             while True:
-                observation, reward, terminated, truncated, info = training_environment.step(prev_action)
+                (
+                    observation,
+                    reward,
+                    terminated,
+                    truncated,
+                    info,
+                ) = training_environment.step(prev_action)
                 done = terminated or truncated
-                action = choose_action_according_to_exploration_exploitation_strategy(observation)
+                action = choose_action_according_to_exploration_exploitation_strategy(
+                    observation
+                )
                 episode_reward += reward
                 self._update_q_table(prev_observation, prev_action, observation, reward)
 

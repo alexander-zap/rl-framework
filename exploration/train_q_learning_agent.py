@@ -47,7 +47,9 @@ if __name__ == "__main__":
         "n_observations": environment.observation_space.n,
         "randomize_q_table": False,
     }
-    agent = CustomAgent(algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters)
+    agent = CustomAgent(
+        algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters
+    )
 
     if DOWNLOAD_EXISTING_AGENT:
         agent.download_from_huggingface_hub(repository_id=REPO_ID)
@@ -56,10 +58,12 @@ if __name__ == "__main__":
         # Train agent
         agent.train(training_environments=[environment], n_episodes=N_TRAINING_EPISODES)
 
-    mean_reward, std_reward = evaluate_agent(agent=agent,
-                                             evaluation_environment=environment,
-                                             n_eval_episodes=N_EVALUATION_EPISODES,
-                                             seeds=seeds)
+    mean_reward, std_reward = evaluate_agent(
+        agent=agent,
+        evaluation_environment=environment,
+        n_eval_episodes=N_EVALUATION_EPISODES,
+        seeds=seeds,
+    )
     print(f"Mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
     model_dictionary = {
@@ -72,11 +76,13 @@ if __name__ == "__main__":
         "gamma": DISCOUNT_FACTOR,
         "max_epsilon": MAX_EPSILON,
         "min_epsilon": MIN_EPSILON,
-        "qtable": agent.algorithm.q_table
+        "qtable": agent.algorithm.q_table,
     }
 
-    agent.upload_to_huggingface_hub(repository_id=REPO_ID,
-                                    environment=environment,
-                                    environment_name=ENV_ID,
-                                    evaluation_seeds=seeds,
-                                    model_dictionary=model_dictionary)
+    agent.upload_to_huggingface_hub(
+        repository_id=REPO_ID,
+        environment=environment,
+        environment_name=ENV_ID,
+        evaluation_seeds=seeds,
+        model_dictionary=model_dictionary,
+    )

@@ -1,13 +1,14 @@
-from rl_framework.agent import Agent
-from rl_framework.environment import Environment
-from stable_baselines3.common.base_class import BaseAlgorithm
+from enum import Enum
+from functools import partial
+from typing import Dict, List, Text
+
+from huggingface_sb3 import load_from_hub, package_to_hub
+from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
-from typing import List, Text, Optional, Dict
-from huggingface_sb3 import package_to_hub, load_from_hub
-from functools import partial
-from enum import Enum
+
+from rl_framework.agent import Agent
+from rl_framework.environment import Environment
 
 
 class StableBaselinesAlgorithm(Enum):
@@ -32,7 +33,7 @@ class StableBaselinesAgent(Agent):
     def __init__(
         self,
         stable_baselines_algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
-        algorithm_parameters: Dict = None
+        algorithm_parameters: Dict = None,
     ):
         """
         Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
@@ -54,11 +55,16 @@ class StableBaselinesAgent(Agent):
 
         self.algorithm = None
         self._algorithm_builder = partial(
-            self.sb3_algorithm_class,
-            **algorithm_parameters
+            self.sb3_algorithm_class, **algorithm_parameters
         )
 
-    def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
+    def train(
+        self,
+        training_environments: List[Environment],
+        total_timesteps: int = 100000,
+        *args,
+        **kwargs
+    ):
         """
         Train the instantiated agent on the environment.
 
@@ -97,6 +103,8 @@ class StableBaselinesAgent(Agent):
         action, _ = self.algorithm.predict([observation], deterministic=True)
         return action[0]
 
+    # TODO: Implement upload/download as adapters; support ClearML
+
     def upload_to_huggingface_hub(
         self,
         evaluation_environment: Environment,
@@ -104,7 +112,7 @@ class StableBaselinesAgent(Agent):
         model_architecture: Text,
         environment_name: Text,
         repository_id: Text,
-        commit_message: Text
+        commit_message: Text,
     ) -> None:
         """
 
@@ -137,9 +145,7 @@ class StableBaselinesAgent(Agent):
             commit_message=commit_message,
         )
 
-    def download_from_huggingface_hub(
-        self, repository_id: Text, filename: Text
-    ):
+    def download_from_huggingface_hub(self, repository_id: Text, filename: Text):
         """
         Download a reinforcement learning model from the HuggingFace Hub and update the agent policy in-place.
 
