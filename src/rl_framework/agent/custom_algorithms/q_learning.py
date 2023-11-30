@@ -61,9 +61,7 @@ class QLearning(Algorithm):
 
         """
         q_old = self._q_table[prev_observation, prev_action]
-        q_new = (1 - self.alpha) * q_old + self.alpha * (
-            reward + self.gamma * np.max(self._q_table[observation])
-        )
+        q_new = (1 - self.alpha) * q_old + self.alpha * (reward + self.gamma * np.max(self._q_table[observation]))
         self._q_table[prev_observation, prev_action] = q_new
 
     def _update_epsilon(self, n_episodes: int):
@@ -74,11 +72,7 @@ class QLearning(Algorithm):
             n_episodes (int): Number of episodes (information required to reduce epsilon steadily.
 
         """
-        self.epsilon = (
-            self.epsilon - 2 / n_episodes
-            if self.epsilon > self.epsilon_min
-            else self.epsilon_min
-        )
+        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
 
     def choose_action(self, observation: object, *args, **kwargs) -> int:
         """
@@ -137,9 +131,7 @@ class QLearning(Algorithm):
         for _ in tqdm(range(n_episodes)):
             episode_reward = 0
             prev_observation, _ = training_environment.reset()
-            prev_action = choose_action_according_to_exploration_exploitation_strategy(
-                prev_observation
-            )
+            prev_action = choose_action_according_to_exploration_exploitation_strategy(prev_observation)
 
             while True:
                 (
@@ -150,9 +142,7 @@ class QLearning(Algorithm):
                     info,
                 ) = training_environment.step(prev_action)
                 done = terminated or truncated
-                action = choose_action_according_to_exploration_exploitation_strategy(
-                    observation
-                )
+                action = choose_action_according_to_exploration_exploitation_strategy(observation)
                 episode_reward += reward
                 self._update_q_table(prev_observation, prev_action, observation, reward)
 

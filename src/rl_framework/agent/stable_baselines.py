@@ -54,17 +54,9 @@ class StableBaselinesAgent(Agent):
             algorithm_parameters = {"policy": "MlpPolicy"}
 
         self.algorithm = None
-        self._algorithm_builder = partial(
-            self.sb3_algorithm_class, **algorithm_parameters
-        )
+        self._algorithm_builder = partial(self.sb3_algorithm_class, **algorithm_parameters)
 
-    def train(
-        self,
-        training_environments: List[Environment],
-        total_timesteps: int = 100000,
-        *args,
-        **kwargs
-    ):
+    def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
         """
         Train the instantiated agent on the environment.
 
@@ -81,7 +73,8 @@ class StableBaselinesAgent(Agent):
 
         environment_iterator = iter(training_environments)
         training_env = make_vec_env(
-            lambda: next(environment_iterator), n_envs=len(training_environments)
+            lambda: next(environment_iterator),
+            n_envs=len(training_environments),
         )
 
         self.algorithm = self._algorithm_builder(env=training_env)
@@ -100,7 +93,13 @@ class StableBaselinesAgent(Agent):
         """
 
         # SB3 model expects multiple observations as input and will output an array of actions as output
-        action, _ = self.algorithm.predict([observation], deterministic=True)
+        (
+            action,
+            _,
+        ) = self.algorithm.predict(
+            [observation],
+            deterministic=True,
+        )
         return action[0]
 
     # TODO: Implement upload/download as adapters; support ClearML
@@ -124,15 +123,13 @@ class StableBaselinesAgent(Agent):
             repository_id (Text): Id of the model repository from the Hugging Face Hub.
             commit_message (Text): Commit message for the HuggingFace repository commit.
 
-        NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the following code
-            `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
+        NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
+            following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
             And don't forget to do a `git push` at the end to push the change to the hub.
 
         """
         # Create a Stable-baselines3 vector environment (required for HuggingFace upload function)
-        vectorized_evaluation_environment = DummyVecEnv(
-            [lambda: evaluation_environment]
-        )
+        vectorized_evaluation_environment = DummyVecEnv([lambda: evaluation_environment])
 
         model = self.algorithm
         package_to_hub(
@@ -145,7 +142,11 @@ class StableBaselinesAgent(Agent):
             commit_message=commit_message,
         )
 
-    def download_from_huggingface_hub(self, repository_id: Text, filename: Text):
+    def download_from_huggingface_hub(
+        self,
+        repository_id: Text,
+        filename: Text,
+    ):
         """
         Download a reinforcement learning model from the HuggingFace Hub and update the agent policy in-place.
 
@@ -164,6 +165,8 @@ class StableBaselinesAgent(Agent):
 
         checkpoint = load_from_hub(repository_id, filename)
         algorithm = self.sb3_algorithm_class.load(
-            checkpoint, custom_objects=custom_objects, print_system_info=True
+            checkpoint,
+            custom_objects=custom_objects,
+            print_system_info=True,
         )
         self.algorithm = algorithm

@@ -69,9 +69,7 @@ class GymEnvironmentWrapper(Environment):
     def render_mode(self, value):
         self._render_mode = value
 
-    def __init__(
-        self, environment_name: Text, render_mode: Text = None, *args, **kwargs
-    ):
+    def __init__(self, environment_name: Text, render_mode: Text = None, *args, **kwargs):
         """
         Initialize the wrapping attributes of a Gym environment instance.
 
@@ -79,9 +77,7 @@ class GymEnvironmentWrapper(Environment):
             environment_name (Text): Name of the environment, as registered in Gym.
             render_mode (Text): Mode for environment .render method (see .render-method for possible modes)
         """
-        self._gym_environment: gym.Env = gym.make(
-            environment_name, render_mode=render_mode, *args, **kwargs
-        )
+        self._gym_environment: gym.Env = gym.make(environment_name, render_mode=render_mode, *args, **kwargs)
         self._action_space = self._gym_environment.action_space
         self._observation_space = self._gym_environment.observation_space
         self._reward_range = self._gym_environment.reward_range
@@ -105,31 +101,31 @@ class GymEnvironmentWrapper(Environment):
              action (ActType): an action provided by the agent to update the environment state.
 
          Returns:
-             observation (ObsType): An element of the environment's :attr:`observation_space` as the next observation due to the agent actions.
-                 An example is a numpy array containing the positions and velocities of the pole in CartPole.
+             observation (ObsType): An element of the environment's :attr:`observation_space` as the next observation
+                due to the agent actions.
+                An example is a numpy array containing the positions and velocities of the pole in CartPole.
              reward (SupportsFloat): The reward as a result of taking the action.
              terminated (bool): Whether the agent reaches the terminal state (as defined under the MDP of the task)
                  which can be positive or negative. An example is reaching the goal state or moving into the lava from
                  the Sutton and Barton, Gridworld. If true, the user needs to call :meth:`reset`.
              truncated (bool): Whether the truncation condition outside the scope of the MDP is satisfied.
-                 Typically, this is a timelimit, but could also be used to indicate an agent physically going out of bounds.
-                 Can be used to end the episode prematurely before a terminal state is reached.
+                 Typically, this is a timelimit, but could also be used to indicate an agent physically going out of
+                 bounds. Can be used to end the episode prematurely before a terminal state is reached.
                  If true, the user needs to call :meth:`reset`.
              info (dict): Contains auxiliary diagnostic information (helpful for debugging, learning, and logging).
-                 This might, for instance, contain: metrics that describe the agent's performance state, variables that are
-                 hidden from observations, or individual reward terms that are combined to produce the total reward.
+                 This might, for instance, contain: metrics that describe the agent's performance state, variables that
+                 are hidden from observations, or individual reward terms that are combined to produce the total reward.
                  In OpenAI Gym <v26, it contains "TimeLimit.truncated" to distinguish truncation and termination,
                  however this is deprecated in favour of returning terminated and truncated variables.
-             done (bool): (Deprecated) A boolean value for if the episode has ended, in which case further :meth:`step` calls will
-                 return undefined results. This was removed in OpenAI Gym v26 in favor of terminated and truncated attributes.
-                 A done signal may be emitted for different reasons: Maybe the task underlying the environment was solved successfully,
-                 a certain timelimit was exceeded, or the physics simulation has entered an invalid state.
+             done (bool): (Deprecated) A boolean value for if the episode has ended, in which case further :meth:`step`
+                calls will return undefined results. This was removed in OpenAI Gym v26 in favor of terminated and
+                truncated attributes. A done signal may be emitted for different reasons: Maybe the task underlying
+                the environment was solved successfully, a certain timelimit was exceeded,
+                or the physics simulation has entered an invalid state.
         """
         return self._gym_environment.step(action)
 
-    def reset(
-        self, seed: Optional[int] = None, *args, **kwargs
-    ) -> Tuple[object, dict[str, Any]]:
+    def reset(self, seed: Optional[int] = None, *args, **kwargs) -> Tuple[object, dict[str, Any]]:
         """Original Gym documentation:
 
         Resets the environment to an initial internal state, returning an initial observation and info.
@@ -139,7 +135,8 @@ class GymEnvironmentWrapper(Environment):
         with the ``seed`` parameter otherwise if the environment already has a random number generator and
         :meth:`reset` is called with ``seed=None``, the RNG is not reset.
 
-        Therefore, :meth:`reset` should (in the typical use case) be called with a seed right after initialization and then never again.
+        Therefore, :meth:`reset` should (in the typical use case) be called with a seed right after initialization and
+        then never again.
 
         For Custom environments, the first line of :meth:`reset` should be ``super().reset(seed=seed)`` which implements
         the seeding correctly.
@@ -152,18 +149,19 @@ class GymEnvironmentWrapper(Environment):
             seed (optional int): The seed that is used to initialize the environment's PRNG (`np_random`).
                 If the environment does not already have a PRNG and ``seed=None`` (the default option) is passed,
                 a seed will be chosen from some source of entropy (e.g. timestamp or /dev/urandom).
-                However, if the environment already has a PRNG and ``seed=None`` is passed, the PRNG will *not* be reset.
-                If you pass an integer, the PRNG will be reset even if it already exists.
-                Usually, you want to pass an integer *right after the environment has been initialized and then never again*.
-                Please refer to the minimal example above to see this paradigm in action.
+                However, if the environment already has a PRNG and ``seed=None`` is passed,
+                the PRNG will *not* be reset. If you pass an integer, the PRNG will be reset even if it already exists.
+                Usually, you want to pass an integer *right after the environment has been initialized and then never
+                again*. Please refer to the minimal example above to see this paradigm in action.
             options (optional dict): Additional information to specify how the environment is reset (optional,
                 depending on the specific environment)
 
         Returns:
-            observation (ObsType): Observation of the initial state. This will be an element of :attr:`observation_space`
-                (typically a numpy array) and is analogous to the observation returned by :meth:`step`.
-            info (dictionary):  This dictionary contains auxiliary information complementing ``observation``. It should be analogous to
-                the ``info`` returned by :meth:`step`.
+            observation (ObsType): Observation of the initial state.
+                This will be an element of :attr:`observation_space` (typically a numpy array) and is analogous to the
+                observation returned by :meth:`step`.
+            info (dictionary):  This dictionary contains auxiliary information complementing ``observation``.
+                It should be analogous to the ``info`` returned by :meth:`step`.
         """
         return self._gym_environment.reset(seed=seed)
 
@@ -183,15 +181,18 @@ class GymEnvironmentWrapper(Environment):
         By convention, if the :attr:`render_mode` is:
 
         - None (default): no render is computed.
-        - "human": The environment is continuously rendered in the current display or terminal, usually for human consumption.
-          This rendering should occur during :meth:`step` and :meth:`render` doesn't need to be called. Returns ``None``.
+        - "human": The environment is continuously rendered in the current display or terminal,
+            usually for human consumption.
+            This rendering should occur during :meth:`step` and :meth:`render` doesn't need to be called.
+            Returns ``None``.
         - "rgb_array": Return a single frame representing the current state of the environment.
-          A frame is a ``np.ndarray`` with shape ``(x, y, 3)`` representing RGB values for an x-by-y pixel image.
+            A frame is a ``np.ndarray`` with shape ``(x, y, 3)`` representing RGB values for an x-by-y pixel image.
         - "ansi": Return a strings (``str``) or ``StringIO.StringIO`` containing a terminal-style text representation
-          for each time step. The text can include newlines and ANSI escape sequences (e.g. for colors).
+            for each time step. The text can include newlines and ANSI escape sequences (e.g. for colors).
         - "rgb_array_list" and "ansi_list": List based version of render modes are possible (except Human) through the
-          wrapper, :py:class:`gymnasium.wrappers.RenderCollection` that is automatically applied during ``gymnasium.make(..., render_mode="rgb_array_list")``.
-          The frames collected are popped after :meth:`render` is called or :meth:`reset`.
+            wrapper, :py:class:`gymnasium.wrappers.RenderCollection` that is automatically applied during
+            ``gymnasium.make(..., render_mode="rgb_array_list")``.
+            The frames collected are popped after :meth:`render` is called or :meth:`reset`.
 
         Note:
             Make sure that your class's :attr:`metadata` ``"render_modes"`` key includes the list of supported modes.

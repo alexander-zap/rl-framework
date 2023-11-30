@@ -17,10 +17,7 @@ COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {E
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [
-        GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array")
-        for _ in range(PARALLEL_ENVIRONMENTS)
-    ]
+    environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
@@ -52,9 +49,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download_from_huggingface_hub(
-            repository_id=REPO_ID, filename=f"{MODEL_NAME}.zip"
-        )
+        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename=f"{MODEL_NAME}.zip")
     else:
         # Train agent
         agent.train(training_environments=environments, total_timesteps=100000)
@@ -63,9 +58,7 @@ if __name__ == "__main__":
     # agent.save(file_path=f"{MODEL_NAME}")
 
     # Evaluate the model
-    mean_reward, std_reward = evaluate_agent(
-        agent=agent, evaluation_environment=environments[0], n_eval_episodes=100
-    )
+    mean_reward, std_reward = evaluate_agent(agent=agent, evaluation_environment=environments[0], n_eval_episodes=100)
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
 
     # # Upload the model

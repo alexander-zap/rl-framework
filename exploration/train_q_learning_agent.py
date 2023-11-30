@@ -47,9 +47,7 @@ if __name__ == "__main__":
         "n_observations": environment.observation_space.n,
         "randomize_q_table": False,
     }
-    agent = CustomAgent(
-        algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters
-    )
+    agent = CustomAgent(algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters)
 
     if DOWNLOAD_EXISTING_AGENT:
         agent.download_from_huggingface_hub(repository_id=REPO_ID)

@@ -134,9 +134,7 @@ class CustomAgent(Agent):
                 done = terminated or truncated
                 img = env.render()
                 images.append(img)
-            imageio.mimsave(
-                out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps
-            )
+            imageio.mimsave(out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps)
 
         _, repo_name = repository_id.split("/")
 
@@ -237,9 +235,7 @@ class CustomAgent(Agent):
             path_in_repo=".",
         )
 
-        print(
-            "Your model is pushed to the Hub. You can view your model here: ", repo_url
-        )
+        print("Your model is pushed to the Hub. You can view your model here: ", repo_url)
 
     def download_from_huggingface_hub(self, repository_id: Text):
         """
