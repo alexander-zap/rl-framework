@@ -50,7 +50,7 @@ if __name__ == "__main__":
     agent = CustomAgent(algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters)
 
     if DOWNLOAD_EXISTING_AGENT:
-        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="q-learning.pkl")
+        agent.download_from_huggingface_hub(repository_id=REPO_ID)
 
     else:
         # Train agent

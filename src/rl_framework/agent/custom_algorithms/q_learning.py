@@ -4,6 +4,7 @@ import numpy as np
 import random
 from tqdm import tqdm
 import logging
+import pickle
 
 from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
 
@@ -126,9 +127,20 @@ class QLearning(Algorithm):
 
     def save(self, file_path: Text):
         """
-        Save the model of the agent to a zipped file.
+        Save the action-prediction model (Q-Table) of the agent to pickle file.
 
         Args:
             file_path (Text): Path where the model should be saved to.
         """
-        raise NotImplementedError
+        with open(file_path, "wb") as f:
+            pickle.dump(self.q_table, f)
+
+    def load(self, file_path: Text):
+        """
+        Load the action-prediction model (Q-Table) from a previously created (by the .save function) pickle file.
+
+         Args:
+            file_path (Text): Path where the model has been previously saved to.
+        """
+        with open(file_path, "rb") as f:
+            self.q_table = pickle.load(f)

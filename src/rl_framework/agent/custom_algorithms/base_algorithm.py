@@ -17,3 +17,7 @@ class Algorithm(ABC):
     @abstractmethod
     def save(self, *args, **kwargs):
         raise NotImplementedError
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        raise NotImplementedError

@@ -13,7 +13,3 @@ class Agent(ABC):
     @abstractmethod
     def choose_action(self, observation, *args, **kwargs):
         raise NotImplementedError
-
-    @abstractmethod
-    def save(self, *args, **kwargs):
-        raise NotImplementedError

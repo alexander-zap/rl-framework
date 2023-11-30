@@ -70,15 +70,6 @@ class CustomAgent(Agent):
 
         return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
-    def save(self, file_path: Text):
-        """
-        Save the model of the agent to a zipped file.
-
-        Args:
-            file_path (Text): Path where the model should be saved to.
-        """
-        self.algorithm.save(file_path)
-
     def upload_to_huggingface_hub(self,
                                   repository_id: Text,
                                   environment: Environment,
@@ -142,9 +133,9 @@ class CustomAgent(Agent):
         # Step 2: Download files
         repo_local_path = Path(snapshot_download(repo_id=repository_id))
 
-        # Step 3: Save the model
-        # Pickle the model
-        with open(repo_local_path / "q-learning.pkl", "wb") as f:
+        # Step 3: Save the model and algorithm hyperparameters
+        self.algorithm.save(repo_local_path / "algorithm.pkl")
+        with open(repo_local_path / "hyperparams.pkl", "wb") as f:
             pickle.dump(model_dictionary, f)
 
         # Step 4: Evaluate the model and build JSON with evaluation metrics
@@ -168,7 +159,7 @@ class CustomAgent(Agent):
         # Step 5: Create the model card
         env_id = model_dictionary["env_id"]
 
-        metadata = {"tags": [env_id, "q-learning", "reinforcement-learning", "custom-implementation"]}
+        metadata = {"tags": [env_id, "reinforcement-learning", "custom-implementation"]}
 
         # Add metrics
         metadata_eval = metadata_eval_result(
@@ -186,14 +177,14 @@ class CustomAgent(Agent):
         metadata = {**metadata, **metadata_eval}
 
         model_card = f"""
-        # **Q-Learning** Agent playing **{environment_name}**
-        This is a trained model of a **Q-Learning** agent playing **{environment_name}** .
+        # Custom implemented agent playing *{environment_name}*
+        This is a trained model of an agent playing *{environment_name}* .
 
         ## Usage
 
         ```python
 
-        model = load_from_hub(repo_id="{repository_id}", filename="q-learning.pkl")
+        model = load_from_hub(repo_id="{repository_id}")
 
         # Don't forget to check if you need to add additional attributes
         env = gym.make(model["env_id"])
@@ -227,13 +218,12 @@ class CustomAgent(Agent):
 
         print("Your model is pushed to the Hub. You can view your model here: ", repo_url)
 
-    def download_from_huggingface_hub(self, repository_id: Text, filename: Text):
+    def download_from_huggingface_hub(self, repository_id: Text):
         """
         Download a reinforcement learning model from the HuggingFace Hub and return a QLearningAgent.
 
         Args:
             repository_id (Text): Repository ID of the reinforcement learning model we want to download.
-            filename (Text): The model filename (file ending with .zip) located in the hugging face repository.
 
         Returns:
             QLearningAgent
@@ -246,12 +236,5 @@ class CustomAgent(Agent):
         :param filename: name of the model zip file from the repository
         """
         # Get the model from the Hub, download and cache the model on your local disk
-        pickle_model = hf_hub_download(repo_id=repository_id, filename=filename)
-
-        with open(pickle_model, "rb") as f:
-            downloaded_model_file = pickle.load(f)
-
-        # FIXME: Only works for QLearning
-        # FIXME: only with correct uploaded model_dictionary (upload format currently hard-coded in main.py)
-        q_table = downloaded_model_file["qtable"]
-        self.algorithm.q_table = q_table
+        pickle_model = hf_hub_download(repo_id=repository_id, filename="algorithm.pkl")
+        self.algorithm.load(pickle_model)

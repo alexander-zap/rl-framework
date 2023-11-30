@@ -54,7 +54,7 @@ To integrate your environment you wish to train on, you need to create an Enviro
 ### Configuring an agent
 To integrate the Reinforcement Learning algorithm you wish to train an agent on your environment with, you need to create an Agent class representing your training agent. For this you can
 - you use an existing Reinforcement Learning Algorithm implemented in the Stable-Baselines 3 framework with [the `StableBaselinesAgent` class](src/rl_framework/agent/stable_baselines.py)
-- create a custom Reinforcement Learning algorithm by inheriting from [the base `Agent` class](src/rl_framework/agent/agent.py), which specifies the required interface
+- create a custom Reinforcement Learning algorithm by inheriting from [the base `Agent` class](src/rl_framework/agent/base_agent.py), which specifies the required interface
 
 
 ### Training

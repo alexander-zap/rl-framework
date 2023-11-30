@@ -97,15 +97,6 @@ class StableBaselinesAgent(Agent):
         action, _ = self.algorithm.predict([observation], deterministic=True)
         return action[0]
 
-    def save(self, file_path: Text):
-        """
-        Save the algorithm of the agent.
-
-        Args:
-            file_path (Text): Path where the algorithm should be saved to.
-        """
-        self.algorithm.save(file_path)
-
     def upload_to_huggingface_hub(
         self,
         evaluation_environment: Environment,
