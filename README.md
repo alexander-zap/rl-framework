@@ -30,6 +30,13 @@ Behind the scenes, this creates a virtual environment and installs `rl_framework
 
 You can now import functions and classes from the module with `import rl_framework`.
 
+### Optional: Install FFMPEG to enable generation of videos (for upload)
+The creation of videos for the functionality of creating video-replays of the agent performance on the environment requires installing the FFMPEG package on your machine.
+This feature is important if you plan to upload replay videos to an experiment tracking service together with the agent itself.
+The ``ffmpeg`` command needs to be available to invoke from the command line, since it is called from Python through a `os.system` invoke. Therefore, it is important that you install this package directly on your machine.
+
+Please follow the guide which can be found [here](https://www.geeksforgeeks.org/how-to-install-ffmpeg-on-windows/) to install the FFMPEG library on your respective machine.
+
 ### Optional: Preparation for pushing your models to the HuggingFace Hub
 1. Create an account to HuggingFace and sign in. ➡ https://huggingface.co/join
 2. Create a new token with write role. ➡ https://huggingface.co/settings/tokens
