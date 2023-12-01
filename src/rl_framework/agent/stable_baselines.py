@@ -106,22 +106,24 @@ class StableBaselinesAgent(Agent):
 
     def upload_to_huggingface_hub(
         self,
-        evaluation_environment: Environment,
-        model_name: Text,
-        model_architecture: Text,
-        environment_name: Text,
         repository_id: Text,
+        evaluation_environment: Environment,
+        environment_name: Text,
+        model_file_name: Text,
+        model_architecture: Text,
         commit_message: Text,
+        n_eval_episodes: int,
     ) -> None:
         """
 
         Args:
-            evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            model_name (Text): Name of the model (uploaded model .zip will be named accordingly).
-            model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
-            environment_name (Text): Name of the environment (only used for model card and metadata).
             repository_id (Text): Id of the model repository from the Hugging Face Hub.
+            evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
+            environment_name (Text): Name of the environment (only used for the model card and metadata).
+            model_file_name (Text): Name of the model (uploaded model .zip will be named accordingly).
+            model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
             commit_message (Text): Commit message for the HuggingFace repository commit.
+            n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
 
         NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
             following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
@@ -132,9 +134,11 @@ class StableBaselinesAgent(Agent):
         vectorized_evaluation_environment = DummyVecEnv([lambda: evaluation_environment])
 
         model = self.algorithm
+
+        # TODO: Replace with code from custom agent (make model_card and other things customizable)
         package_to_hub(
             model=model,
-            model_name=model_name,
+            model_name=model_file_name,
             model_architecture=model_architecture,
             env_id=environment_name,
             eval_env=vectorized_evaluation_environment,

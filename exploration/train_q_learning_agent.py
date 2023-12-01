@@ -50,7 +50,7 @@ if __name__ == "__main__":
     agent = CustomAgent(algorithm=CustomAlgorithm.Q_LEARNING, algorithm_parameters=algorithm_parameters)
 
     if DOWNLOAD_EXISTING_AGENT:
-        agent.download_from_huggingface_hub(repository_id=REPO_ID)
+        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="algorithm.pkl")
 
     else:
         # Train agent
@@ -64,6 +64,7 @@ if __name__ == "__main__":
     )
     print(f"Mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
+    # TODO: Find another way to log hyperparams
     model_dictionary = {
         "env_id": ENV_ID,
         "max_steps": 99,
@@ -74,13 +75,14 @@ if __name__ == "__main__":
         "gamma": DISCOUNT_FACTOR,
         "max_epsilon": MAX_EPSILON,
         "min_epsilon": MIN_EPSILON,
-        "qtable": agent.algorithm.q_table,
     }
 
     agent.upload_to_huggingface_hub(
         repository_id=REPO_ID,
-        environment=environment,
+        evaluation_environment=environment,
         environment_name=ENV_ID,
-        evaluation_seeds=seeds,
-        model_dictionary=model_dictionary,
+        model_architecture=MODEL_ARCHITECTURE,
+        model_file_name="algorithm.pkl",
+        commit_message=COMMIT_MESSAGE,
+        n_eval_episodes=50,
     )

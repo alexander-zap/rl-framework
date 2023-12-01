@@ -1,6 +1,5 @@
 import datetime
 import json
-import pickle
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Text
@@ -95,11 +94,12 @@ class CustomAgent(Agent):
     def upload_to_huggingface_hub(
         self,
         repository_id: Text,
-        environment: Environment,
+        evaluation_environment: Environment,
         environment_name: Text,
-        model_dictionary: Dict,
-        evaluation_seeds: Optional[List[int]] = None,
-        video_fps: int = 1,
+        model_file_name: Text,
+        model_architecture: Text,
+        commit_message: Text,
+        n_eval_episodes: int,
     ):
         """
         Evaluate, Generate a video and Upload a model to Hugging Face Hub.
@@ -110,13 +110,13 @@ class CustomAgent(Agent):
         - It pushes everything to the Hub
 
         Args:
-            agent_to_upload (StableBaselinesAgent): Agent class with the SB3 model stored in attribute `.model`.
             repository_id (Text): Id of the model repository from the Hugging Face Hub.
-            environment (Environment): Environment used for final evaluation and clip creation before upload.
-            environment_name (Text): Name of the environment (for the model card).
-            model_dictionary (Dict): The model dictionary that contains the model and the hyperparameters.
-            evaluation_seeds (Optional[List[int]]): List of seeds for evaluations.
-            video_fps (int): How many frame per seconds to record the video replay.
+            evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
+            environment_name (Text): Name of the environment (only used for the model card).
+            model_file_name (Text): Name of the model (uploaded model .pkl will be named accordingly).
+            model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
+            commit_message (Text): Commit message for the HuggingFace repository commit.
+            n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
         """
 
         def record_video(env: Environment, out_directory: Path, fps: int = 1):
@@ -146,7 +146,7 @@ class CustomAgent(Agent):
 
         _, repo_name = repository_id.split("/")
 
-        eval_env = environment
+        eval_env = evaluation_environment
         api = HfApi()
 
         # Step 1: Create the repo
@@ -158,23 +158,20 @@ class CustomAgent(Agent):
         # Step 2: Download files
         repo_local_path = Path(snapshot_download(repo_id=repository_id))
 
-        # Step 3: Save the model and algorithm hyperparameters
-        self.algorithm.save(repo_local_path / "algorithm.pkl")
-        with open(repo_local_path / "hyperparams.pkl", "wb") as f:
-            pickle.dump(model_dictionary, f)
+        # Step 3: Save the model
+        self.algorithm.save(repo_local_path / model_file_name)
 
         # Step 4: Evaluate the model and build JSON with evaluation metrics
         mean_reward, std_reward = evaluate_agent(
             agent=self,
             evaluation_environment=eval_env,
-            n_eval_episodes=model_dictionary["n_eval_episodes"],
-            seeds=evaluation_seeds,
+            n_eval_episodes=n_eval_episodes,
         )
 
         evaluate_data = {
-            "env_id": model_dictionary["env_id"],
+            "env_id": environment_name,
             "mean_reward": mean_reward,
-            "n_eval_episodes": model_dictionary["n_eval_episodes"],
+            "n_eval_episodes": n_eval_episodes,
             "eval_datetime": datetime.datetime.now().isoformat(),
         }
 
@@ -184,9 +181,7 @@ class CustomAgent(Agent):
             json.dump(evaluate_data, outfile)
 
         # Step 5: Create the model card
-        env_id = model_dictionary["env_id"]
-
-        metadata = {"tags": [env_id, "reinforcement-learning", "custom-implementation"]}
+        metadata = {"tags": [environment_name, "reinforcement-learning", "custom-implementation"]}
 
         # Add metrics
         metadata_eval = metadata_eval_result(
@@ -196,8 +191,8 @@ class CustomAgent(Agent):
             metrics_pretty_name="mean_reward",
             metrics_id="mean_reward",
             metrics_value=f"{mean_reward:.2f} +/- {std_reward:.2f}",
-            dataset_pretty_name=env_id,
-            dataset_id=env_id,
+            dataset_pretty_name=environment_name,
+            dataset_id=environment_name,
         )
 
         # Merges both dictionaries
@@ -206,6 +201,7 @@ class CustomAgent(Agent):
         model_card = f"""
         # Custom implemented agent playing *{environment_name}*
         This is a trained model of an agent playing *{environment_name}* .
+        The agent was trained with a {model_architecture} algorithm.
 
         ## Usage
 
@@ -234,34 +230,32 @@ class CustomAgent(Agent):
 
         # Step 6: Record a video
         video_path = repo_local_path / "replay.mp4"
-        record_video(env=environment, out_directory=video_path, fps=video_fps)
+        record_video(env=evaluation_environment, out_directory=video_path, fps=1)
 
         # Step 7. Push everything to the Hub
         api.upload_folder(
             repo_id=repository_id,
             folder_path=repo_local_path,
             path_in_repo=".",
+            commit_message=commit_message,
         )
 
         print("Your model is pushed to the Hub. You can view your model here: ", repo_url)
 
-    def download_from_huggingface_hub(self, repository_id: Text):
+    def download_from_huggingface_hub(
+        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None
+    ):
         """
-        Download a reinforcement learning model from the HuggingFace Hub and return a QLearningAgent.
+        Download a reinforcement learning model from the HuggingFace Hub and update the .algorithm attribute in-place.
 
         Args:
-            repository_id (Text): Repository ID of the reinforcement learning model we want to download.
-
-        Returns:
-            QLearningAgent
-
-        """
+            repository_id (Text): Model repository ID from the HF Hub of the RL model we want to download.
+            filename (Text): The model filename located in the hugging face repository.
+            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
 
         """
-        Download a model from Hugging Face Hub.
-        :param repo_id: id of the model repository from the Hugging Face Hub
-        :param filename: name of the model zip file from the repository
-        """
+
         # Get the model from the Hub, download and cache the model on your local disk
-        pickle_model = hf_hub_download(repo_id=repository_id, filename="algorithm.pkl")
+        pickle_model = hf_hub_download(repo_id=repository_id, filename=filename)
         self.algorithm.load(pickle_model)
+        # TODO: Find a way to load algorithm_parameters into algorithm

@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # Create new agent
     agent = StableBaselinesAgent(
-        stable_baselines_algorithm=StableBaselinesAlgorithm.PPO,
+        algorithm=StableBaselinesAlgorithm.PPO,
         algorithm_parameters={
             "policy": "MlpPolicy",
             "learning_rate": 0.001,
@@ -64,9 +64,10 @@ if __name__ == "__main__":
     # # Upload the model
     agent.upload_to_huggingface_hub(
         evaluation_environment=environments[0],
-        model_name=MODEL_NAME,
+        model_file_name=MODEL_NAME,
         model_architecture=MODEL_ARCHITECTURE,
         environment_name=ENV_ID,
         repository_id=REPO_ID,
         commit_message=COMMIT_MESSAGE,
+        n_eval_episodes=50,
     )
