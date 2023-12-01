@@ -1,6 +1,6 @@
 from enum import Enum
 from functools import partial
-from typing import Dict, List, Text
+from typing import Dict, List, Optional, Text
 
 from huggingface_sb3 import load_from_hub, package_to_hub
 from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
@@ -143,9 +143,7 @@ class StableBaselinesAgent(Agent):
         )
 
     def download_from_huggingface_hub(
-        self,
-        repository_id: Text,
-        filename: Text,
+        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None
     ):
         """
         Download a reinforcement learning model from the HuggingFace Hub and update the agent policy in-place.
@@ -153,20 +151,14 @@ class StableBaselinesAgent(Agent):
         Args:
             repository_id (Text): Repository ID of the reinforcement learning model we want to download.
             filename (Text): The model filename (file ending with .zip) located in the hugging face repository.
+            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
 
         """
-
-        # TODO: This breaks possibility of fine-tuning a downloaded model.
-        custom_objects = {
-            "learning_rate": 0.0,
-            "lr_schedule": lambda _: 0.0,
-            "clip_range": lambda _: 0.0,
-        }
 
         checkpoint = load_from_hub(repository_id, filename)
         algorithm = self.sb3_algorithm_class.load(
             checkpoint,
-            custom_objects=custom_objects,
+            custom_objects=algorithm_parameters,
             print_system_info=True,
         )
         self.algorithm = algorithm
