@@ -8,7 +8,7 @@ class Agent(ABC):
         return NotImplementedError
 
     @abstractmethod
-    def __init__(self, *args, **kwargs):
+    def __init__(self, algorithm, algorithm_parameters, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

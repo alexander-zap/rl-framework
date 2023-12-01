@@ -32,14 +32,14 @@ class StableBaselinesAgent(Agent):
 
     def __init__(
         self,
-        stable_baselines_algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
+        algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
         algorithm_parameters: Dict = None,
     ):
         """
         Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
 
         Args:
-            stable_baselines_algorithm (StableBaselinesAlgorithm): Enum with values being SB3 RL Algorithm classes.
+            algorithm (StableBaselinesAlgorithm): Enum with values being SB3 RL Algorithm classes.
                 Specifies the algorithm for RL training.
                 Defaults to PPO.
             algorithm_parameters (Dict): Parameters / keyword arguments for the specified SB3 RL Algorithm class.
@@ -48,13 +48,13 @@ class StableBaselinesAgent(Agent):
                 for algorithm-specific params.
         """
 
-        self.sb3_algorithm_class = stable_baselines_algorithm.value
+        self.algorithm_class = algorithm.value
 
         if algorithm_parameters is None:
             algorithm_parameters = {"policy": "MlpPolicy"}
 
         self.algorithm = None
-        self._algorithm_builder = partial(self.sb3_algorithm_class, **algorithm_parameters)
+        self._algorithm_builder = partial(self.algorithm_class, **algorithm_parameters)
 
     def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
         """
@@ -156,7 +156,7 @@ class StableBaselinesAgent(Agent):
         """
 
         checkpoint = load_from_hub(repository_id, filename)
-        algorithm = self.sb3_algorithm_class.load(
+        algorithm = self.algorithm_class.load(
             checkpoint,
             custom_objects=algorithm_parameters,
             print_system_info=True,
