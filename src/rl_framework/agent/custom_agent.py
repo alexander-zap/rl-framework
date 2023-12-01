@@ -13,7 +13,6 @@ from huggingface_hub.repocard import metadata_eval_result, metadata_save
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
 from rl_framework.util import evaluate_agent
-
 from .custom_algorithms import QLearning
 
 
@@ -22,6 +21,14 @@ class CustomAlgorithm(Enum):
 
 
 class CustomAgent(Agent):
+    @property
+    def algorithm(self):
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, value):
+        self._algorithm = value
+
     def __init__(
         self,
         algorithm: CustomAlgorithm = CustomAlgorithm.Q_LEARNING,

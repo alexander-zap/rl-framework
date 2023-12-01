@@ -2,6 +2,11 @@ from abc import ABC, abstractmethod
 
 
 class Agent(ABC):
+    @property
+    @abstractmethod
+    def algorithm(self):
+        return NotImplementedError
+
     @abstractmethod
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
