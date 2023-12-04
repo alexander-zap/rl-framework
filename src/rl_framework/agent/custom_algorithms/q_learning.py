@@ -87,8 +87,6 @@ class QLearning(Algorithm):
 
         return np.argmax(self._q_table[observation])
 
-    # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
-    #   Pass exploration-exploitation strategy from outside
     def train(
         self,
         training_environments: List[Environment],
@@ -110,6 +108,8 @@ class QLearning(Algorithm):
             n_episodes (int): Number of episodes the agent should train for before terminating the training.
         """
 
+        # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
+        #   Pass exploration-exploitation strategy from outside
         def choose_action_according_to_exploration_exploitation_strategy(obs):
             greedy_action = self.choose_action(obs)
             # Choose random action with probability epsilon
@@ -153,7 +153,7 @@ class QLearning(Algorithm):
                     self._update_epsilon(n_episodes)
                     break
 
-    def save(self, file_path: Text):
+    def save(self, file_path: Text, *args, **kwargs):
         """
         Save the action-prediction model (Q-Table) of the agent to pickle file.
 
@@ -163,7 +163,7 @@ class QLearning(Algorithm):
         with open(file_path, "wb") as f:
             pickle.dump(self.q_table, f)
 
-    def load(self, file_path: Text):
+    def load(self, file_path: Text, *args, **kwargs):
         """
         Load the action-prediction model (Q-Table) from a previously created (by the .save function) pickle file.
 
