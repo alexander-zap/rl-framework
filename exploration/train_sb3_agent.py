@@ -1,19 +1,33 @@
-from rl_framework.agent.stable_baselines import (
+import logging
+import sys
+
+from rl_framework.agent import (
     StableBaselinesAgent,
     StableBaselinesAlgorithm,
 )
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.util import evaluate_agent
 
-ENV_ID = "LunarLander-v2"
+# Create logging handler to output logs to stdout
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+
+ENV_ID = "Taxi-v3"
 MODEL_ARCHITECTURE = "PPO"
 PARALLEL_ENVIRONMENTS = 32
 
-DOWNLOAD_EXISTING_AGENT = False
-MODEL_NAME = f"{MODEL_ARCHITECTURE}-{ENV_ID}"
-REPO_ID = f"zap-thamm/{MODEL_NAME}"
+DOWNLOAD_EXISTING_AGENT = True
+REPO_ID = f"zap-thamm/{MODEL_ARCHITECTURE}-{ENV_ID}"
 COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {ENV_ID}"
 
+N_TRAINING_TIMESTEPS = 100000
+N_EVALUATION_EPISODES = 100
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
@@ -30,6 +44,8 @@ if __name__ == "__main__":
 
     print("\n _____REWARD RANGE_____ \n")
     print("Reward Range Interval", environments[0].reward_range)
+
+    seeds = None
 
     # Create new agent
     agent = StableBaselinesAgent(
@@ -49,25 +65,25 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename=f"{MODEL_NAME}.zip")
+        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="algorithm.zip")
+
     else:
         # Train agent
-        agent.train(training_environments=environments, total_timesteps=100000)
-
-    # Optional: Save the model
-    # agent.save(file_path=f"{MODEL_NAME}")
+        agent.train(training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS)
 
     # Evaluate the model
-    mean_reward, std_reward = evaluate_agent(agent=agent, evaluation_environment=environments[0], n_eval_episodes=100)
-    print(f"mean_reward={mean_reward:.2f} +/- {std_reward}")
+    mean_reward, std_reward = evaluate_agent(
+        agent=agent, evaluation_environment=environments[0], n_eval_episodes=N_EVALUATION_EPISODES, seeds=seeds
+    )
+    print(f"mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
-    # # Upload the model
+    # Upload the model
     agent.upload_to_huggingface_hub(
-        evaluation_environment=environments[0],
-        model_file_name=MODEL_NAME,
-        model_architecture=MODEL_ARCHITECTURE,
-        environment_name=ENV_ID,
         repository_id=REPO_ID,
+        evaluation_environment=environments[0],
+        environment_name=ENV_ID,
+        model_architecture=MODEL_ARCHITECTURE,
+        model_file_name="algorithm",
         commit_message=COMMIT_MESSAGE,
         n_eval_episodes=50,
     )
