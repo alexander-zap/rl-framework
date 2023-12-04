@@ -4,7 +4,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Text
 
-
 from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 

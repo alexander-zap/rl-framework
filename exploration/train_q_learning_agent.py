@@ -1,10 +1,7 @@
 import logging
 import sys
 
-from rl_framework.agent import (
-    CustomAgent,
-    CustomAlgorithm
-)
+from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.util import evaluate_agent
 
