@@ -4,14 +4,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Text
 
-import imageio
-import numpy as np
+
 from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
-from rl_framework.util import evaluate_agent
+from rl_framework.util import evaluate_agent, record_video
 
 from .custom_algorithms import QLearning
 
@@ -54,7 +53,7 @@ class CustomAgent(Agent):
     def train(
         self,
         training_environments: List[Environment],
-        total_timesteps: int = 100000,
+        total_timesteps: int,
         *args,
         **kwargs,
     ):
@@ -118,31 +117,6 @@ class CustomAgent(Agent):
             commit_message (Text): Commit message for the HuggingFace repository commit.
             n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
         """
-
-        def record_video(env: Environment, out_directory: Path, fps: int = 1):
-            """
-            Generate a replay video of the agent.
-                env (Environment): Environment used for final evaluation and clip creation before upload.
-                agent (QLearningAgent): Agent to record video for.
-                out_directory (Path): Path where video should be saved to.
-                fps: How many frame per seconds to record the video replay.
-            """
-
-            images = []
-            done = False
-            state, _ = env.reset()
-            img = env.render()
-            images.append(img)
-            while not done:
-                # Take the action (index) that have the maximum expected future reward given that state
-                action = self.choose_action(state)
-                state, reward, terminated, truncated, info = env.step(
-                    action
-                )  # We directly put next_state = state for recording logic
-                done = terminated or truncated
-                img = env.render()
-                images.append(img)
-            imageio.mimsave(out_directory, [np.array(img) for i, img in enumerate(images)], fps=fps)
 
         _, repo_name = repository_id.split("/")
 
@@ -230,7 +204,7 @@ class CustomAgent(Agent):
 
         # Step 6: Record a video
         video_path = repo_local_path / "replay.mp4"
-        record_video(env=evaluation_environment, out_directory=video_path, fps=1)
+        record_video(agent=self, evaluation_environment=evaluation_environment, file_path=video_path, fps=1)
 
         # Step 7. Push everything to the Hub
         api.upload_folder(

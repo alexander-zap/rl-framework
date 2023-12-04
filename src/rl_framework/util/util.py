@@ -1,5 +1,7 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Tuple
 
+import imageio
 import numpy as np
 from tqdm import tqdm
 
@@ -9,9 +11,10 @@ def evaluate_agent(
     evaluation_environment,
     n_eval_episodes: int,
     seeds: Optional[List[int]] = None,
-):
+) -> Tuple[int, int]:
     """
     Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
+
     Args:
         agent (Agent): Agent to evaluate
         evaluation_environment (Environment): The evaluation environment.
@@ -51,3 +54,34 @@ def evaluate_agent(
     std_reward = np.std(episode_rewards)
 
     return mean_reward, std_reward
+
+
+def record_video(agent, evaluation_environment, file_path: Path, fps: int = 1):
+    """
+    Generate a replay video of the agent.
+
+    Args:
+        agent (Agent): Agent to record video for.
+        evaluation_environment (Environment): Environment used for evaluation and clip creation.
+        file_path (Path): Path where video should be saved to.
+        fps (int): How many frame per seconds to record the video replay.
+    """
+
+    images = []
+    done = False
+    observation, _ = evaluation_environment.reset()
+    img = evaluation_environment.render()
+    images.append(img)
+    while not done:
+        action = agent.choose_action(observation)
+        (
+            observation,
+            reward,
+            terminated,
+            truncated,
+            info,
+        ) = evaluation_environment.step(action)
+        done = terminated or truncated
+        img = evaluation_environment.render()
+        images.append(img)
+    imageio.mimsave(file_path, [np.array(img) for i, img in enumerate(images)], fps=fps)
