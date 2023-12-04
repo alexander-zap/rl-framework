@@ -64,16 +64,6 @@ class QLearning(Algorithm):
         q_new = (1 - self.alpha) * q_old + self.alpha * (reward + self.gamma * np.max(self._q_table[observation]))
         self._q_table[prev_observation, prev_action] = q_new
 
-    def _update_epsilon(self, n_episodes: int):
-        """
-        Gradually reduce epsilon after every done episode
-
-        Args:
-            n_episodes (int): Number of episodes (information required to reduce epsilon steadily.
-
-        """
-        self.epsilon = self.epsilon - 2 / n_episodes if self.epsilon > self.epsilon_min else self.epsilon_min
-
     def choose_action(self, observation: object, *args, **kwargs) -> int:
         """
         Chooses action which the agent will perform next, according to the observed environment.
@@ -90,7 +80,7 @@ class QLearning(Algorithm):
     def train(
         self,
         training_environments: List[Environment],
-        n_episodes: int = 10000,
+        total_timesteps: int,
         *args,
         **kwargs,
     ):
@@ -105,7 +95,7 @@ class QLearning(Algorithm):
         Args:
             training_environments (List[Environment]): List of environments on which the agent should be trained on.
                 # NOTE: This class only supports training on one environment
-            n_episodes (int): Number of episodes the agent should train for before terminating the training.
+            total_timesteps (int): Number of timesteps the agent should train for before terminating the training.
         """
 
         # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
@@ -127,13 +117,18 @@ class QLearning(Algorithm):
             )
 
         training_environment = training_environments[0]
+        tqdm_progress_bar = tqdm(total=total_timesteps)
+        current_timestep = 0
 
-        for _ in tqdm(range(n_episodes)):
+        while current_timestep <= total_timesteps:
+            done = False
             episode_reward = 0
+            episode_timestep = 0
             prev_observation, _ = training_environment.reset()
             prev_action = choose_action_according_to_exploration_exploitation_strategy(prev_observation)
 
-            while True:
+            while not done:
+                episode_timestep += 1
                 (
                     observation,
                     reward,
@@ -150,8 +145,13 @@ class QLearning(Algorithm):
                 prev_action = action
 
                 if done:
-                    self._update_epsilon(n_episodes)
-                    break
+                    current_timestep += episode_timestep
+                    tqdm_progress_bar.n = current_timestep if current_timestep <= total_timesteps else total_timesteps
+                    tqdm_progress_bar.refresh()
+                    # Gradually reduce epsilon after every done episode
+                    self.epsilon = 2.0 * current_timestep / total_timesteps if self.epsilon > self.epsilon_min else self.epsilon
+
+        tqdm_progress_bar.close()
 
     def save(self, file_path: Text, *args, **kwargs):
         """

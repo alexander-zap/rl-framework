@@ -7,7 +7,7 @@ class Algorithm(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train(self, training_environments, *args, **kwargs):
+    def train(self, training_environments, total_timesteps, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
