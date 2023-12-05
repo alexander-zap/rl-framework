@@ -15,7 +15,6 @@ setuptools = "^69.0"
 gymnasium = {extras = ["box2d"], version = "^0.29.1"}
 stable-baselines3 = {extras = ["extra"], version = "^2.2"}
 tqdm = "^4.66"
-huggingface-sb3 = "~3.0"
 huggingface_hub = "^0.19"
 imageio = "^2.33.0"
 moviepy = "^1.0.3"

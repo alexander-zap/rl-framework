@@ -1,14 +1,14 @@
 from enum import Enum
 from functools import partial
+from pathlib import Path
 from typing import Dict, List, Optional, Text
 
-from huggingface_sb3 import load_from_hub, package_to_hub
 from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv
 
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
+from rl_framework.util import download_from_huggingface_hub, upload_to_huggingface_hub
 
 
 class StableBaselinesAlgorithm(Enum):
@@ -102,9 +102,30 @@ class StableBaselinesAgent(Agent):
         )
         return action[0]
 
-    # TODO: Implement upload/download as adapters; support ClearML
+    def save_to_file(self, file_path: Path, *args, **kwargs) -> None:
+        """Save the agent to a folder (for later loading).
 
-    def upload_to_huggingface_hub(
+        Args:
+            file_path (Path): The file where the agent should be saved to (SB3 expects a file name ending with .zip).
+        """
+        self.algorithm.save(file_path)
+
+    def load_from_file(self, file_path: Path, algorithm_parameters: Dict, *args, **kwargs) -> None:
+        """Load the agent in-place from an agent-save folder.
+
+        Args:
+            file_path (Path): The model filename (file ending with .zip).
+            algorithm_parameters: Parameters to be set for the loaded algorithm.
+        """
+        algorithm = self.algorithm_class.load(
+            file_path,
+            custom_objects=algorithm_parameters,
+            print_system_info=True,
+        )
+        self.algorithm = algorithm
+
+    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
+    def upload(
         self,
         repository_id: Text,
         evaluation_environment: Environment,
@@ -113,41 +134,23 @@ class StableBaselinesAgent(Agent):
         model_architecture: Text,
         commit_message: Text,
         n_eval_episodes: int,
+        *args,
+        **kwargs,
     ) -> None:
-        """
-
-        Args:
-            repository_id (Text): Id of the model repository from the Hugging Face Hub.
-            evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            environment_name (Text): Name of the environment (only used for the model card and metadata).
-            model_file_name (Text): Name of the model (uploaded model .zip will be named accordingly).
-            model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
-            commit_message (Text): Commit message for the HuggingFace repository commit.
-            n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
-
-        NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
-            following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
-            And don't forget to do a `git push` at the end to push the change to the hub.
-
-        """
-        # Create a Stable-baselines3 vector environment (required for HuggingFace upload function)
-        vectorized_evaluation_environment = DummyVecEnv([lambda: evaluation_environment])
-
-        model = self.algorithm
-
-        # TODO: Replace with code from custom agent (make model_card and other things customizable)
-        package_to_hub(
-            model=model,
-            model_name=model_file_name,
+        upload_to_huggingface_hub(
+            agent=self,
+            evaluation_environment=evaluation_environment,
+            repository_id=repository_id,
+            environment_name=environment_name,
+            file_name=model_file_name,
             model_architecture=model_architecture,
-            env_id=environment_name,
-            eval_env=vectorized_evaluation_environment,
-            repo_id=repository_id,
             commit_message=commit_message,
+            n_eval_episodes=n_eval_episodes,
         )
 
-    def download_from_huggingface_hub(
-        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None
+    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
+    def download(
+        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None, *args, **kwargs
     ):
         """
         Download a reinforcement learning model from the HuggingFace Hub and update the agent policy in-place.
@@ -159,10 +162,6 @@ class StableBaselinesAgent(Agent):
 
         """
 
-        checkpoint = load_from_hub(repository_id, filename)
-        algorithm = self.algorithm_class.load(
-            checkpoint,
-            custom_objects=algorithm_parameters,
-            print_system_info=True,
+        download_from_huggingface_hub(
+            agent=self, repository_id=repository_id, file_name=filename, algorithm_parameters=algorithm_parameters
         )
-        self.algorithm = algorithm

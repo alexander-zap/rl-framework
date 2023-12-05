@@ -1,7 +1,8 @@
 import logging
 import pickle
 import random
-from typing import List, Text
+from pathlib import Path
+from typing import List
 
 import numpy as np
 from tqdm import tqdm
@@ -155,7 +156,7 @@ class QLearning(Algorithm):
 
         tqdm_progress_bar.close()
 
-    def save(self, file_path: Text, *args, **kwargs):
+    def save_to_file(self, file_path: Path, *args, **kwargs):
         """
         Save the action-prediction model (Q-Table) of the agent to pickle file.
 
@@ -165,7 +166,7 @@ class QLearning(Algorithm):
         with open(file_path, "wb") as f:
             pickle.dump(self.q_table, f)
 
-    def load(self, file_path: Text, *args, **kwargs):
+    def load_from_file(self, file_path: Path, *args, **kwargs):
         """
         Load the action-prediction model (Q-Table) from a previously created (by the .save function) pickle file.
 

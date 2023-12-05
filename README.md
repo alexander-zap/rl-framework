@@ -54,14 +54,13 @@ In short:
 ### Configuring an environment
 To integrate your environment you wish to train on, you need to create an Environment class representing your problem. For this you can
 - you use an existing Gym environment with [the `GymEnvironment` class](src/rl_framework/environment/gym_environment.py)
-- you use an existing MLAgent environment with [the `MLAgentEnvironment` class](src/rl_framework/environment/mlagents_environment.py)
+- you use an existing MLAgent environment with [the `MLAgentsEnvironment` class](src/rl_framework/environment/mlagents_environment.py)
 - create a custom environment by inheriting from [the base `Environment` class](src/rl_framework/environment/environment.py), which specifies the required interface
-
 
 ### Configuring an agent
 To integrate the Reinforcement Learning algorithm you wish to train an agent on your environment with, you need to create an Agent class representing your training agent. For this you can
-- you use an existing Reinforcement Learning Algorithm implemented in the Stable-Baselines 3 framework with [the `StableBaselinesAgent` class](src/rl_framework/agent/stable_baselines.py)
-- create a custom Reinforcement Learning algorithm by inheriting from [the base `Agent` class](src/rl_framework/agent/base_agent.py), which specifies the required interface
+- you use an existing Reinforcement Learning algorithm implemented in the Stable-Baselines 3 framework with [the `StableBaselinesAgent` class](src/rl_framework/agent/stable_baselines.py) (see the Example section below)
+- create a custom Reinforcement Learning algorithm by inheriting from [the base `BaseAgent` class](src/rl_framework/agent/base_agent.py), which specifies the required interface
 
 
 ### Training
@@ -76,19 +75,19 @@ Independent of which environment and which agent you choose, the unified interfa
 ### Evaluating
 
 Once you trained the agent, you can evaluate the agent policy on the environment and get the average accumulated reward (and standard deviation) as evaluation metric.
-This evaluation method is implemented in the [util functions](src/rl_framework/util/util.py) and called with one line of code:
+This evaluation method is implemented in the [util evaluation functions](src/rl_framework/util/evaluating.py) and called with one line of code:
 ```
-evaluate(agent_to_evaluate=agent, evaluation_environment=environment)
+evaluate_agent(agent=agent, evaluation_environment=environment)
 ```
 
 ### Uploading and downloading models from the HuggingFace Hub
 
 Once you trained the agent, you can upload the agent model to the HuggingFace Hub in order to share and compare your agent to others. You can also downloaded yours or other agents from the same HuggingFace Hub and use them for solving environments or re-training.
-The methode which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util functions](src/rl_framework/util/util.py).
+The methods which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util saving and loading functions](src/rl_framework/util/saving_and_loading.py).
 
 ### Example
 
-In [this example script](exploration/train_agent.py) you can see all of the above steps unified.
+In [this example script](exploration/train_sb3_agent.py) you can see all of the above steps unified.
 
 For a quick impression in this README, find a minimal training and evaluation example here:
 ```
@@ -97,8 +96,8 @@ environments = [GymEnvironmentWrapper(ENV_ID) for _ in range(PARALLEL_ENVIRONMEN
 
 # Create new agent
 agent = StableBaselinesAgent(
-    rl_algorithm=StableBaselinesAlgorithm.PPO,
-    rl_algorithm_parameters={
+    algorithm=StableBaselinesAlgorithm.PPO,
+    algorithm_parameters={
         "policy": "MlpPolicy"
     }
 )
@@ -113,7 +112,7 @@ mean_reward, std_reward = evaluate(agent_to_evaluate=agent, evaluation_environme
 
 ### Notebooks
 
-You can use your module code (`src/`) in Jupyter notebooks (`notebooks/`) without running into import errors by running:
+You can use your module code (`src/`) in Jupyter notebooks without running into import errors by running:
 
     poetry run jupyter notebook
 
@@ -159,10 +158,6 @@ Before contributing, please set up the pre-commit hooks to reduce errors and ens
     pre-commit install
 
 If you run into any issues, you can remove the hooks again with `pre-commit uninstall`.
-
-## Contact
-
-Alexander Zap (alexander.zap@alexanderthamm.com)
 
 ## License
 

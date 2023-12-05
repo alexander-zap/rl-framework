@@ -19,7 +19,7 @@ ENV_ID = "Taxi-v3"
 MODEL_ARCHITECTURE = "QLearning"
 PARALLEL_ENVIRONMENTS = 32
 
-DOWNLOAD_EXISTING_AGENT = True
+DOWNLOAD_EXISTING_AGENT = False
 REPO_ID = f"zap-thamm/{MODEL_ARCHITECTURE}-{ENV_ID}"
 COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {ENV_ID}"
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="algorithm.pkl")
+        agent.download(repository_id=REPO_ID, file_name="algorithm.pkl")
 
     else:
         # Train agent
@@ -86,12 +86,12 @@ if __name__ == "__main__":
     }
 
     # Upload the model
-    agent.upload_to_huggingface_hub(
+    agent.upload(
         repository_id=REPO_ID,
         evaluation_environment=environments[0],
         environment_name=ENV_ID,
         model_architecture=MODEL_ARCHITECTURE,
-        model_file_name="algorithm.pkl",
+        file_name="algorithm.pkl",
         commit_message=COMMIT_MESSAGE,
         n_eval_episodes=50,
     )

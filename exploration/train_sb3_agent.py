@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download_from_huggingface_hub(repository_id=REPO_ID, filename="algorithm.zip")
+        agent.download(repository_id=REPO_ID, filename="algorithm.zip")
 
     else:
         # Train agent
@@ -75,12 +75,12 @@ if __name__ == "__main__":
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
     # Upload the model
-    agent.upload_to_huggingface_hub(
+    agent.upload(
         repository_id=REPO_ID,
         evaluation_environment=environments[0],
         environment_name=ENV_ID,
         model_architecture=MODEL_ARCHITECTURE,
-        model_file_name="algorithm",
+        model_file_name="algorithm.zip",
         commit_message=COMMIT_MESSAGE,
         n_eval_episodes=50,
     )

@@ -1,15 +1,10 @@
-import datetime
-import json
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Text
 
-from huggingface_hub import HfApi, hf_hub_download, snapshot_download
-from huggingface_hub.repocard import metadata_eval_result, metadata_save
-
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
-from rl_framework.util import evaluate_agent, record_video
+from rl_framework.util import download_from_huggingface_hub, upload_to_huggingface_hub
 
 from .custom_algorithms import QLearning
 
@@ -87,148 +82,44 @@ class CustomAgent(Agent):
 
         return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
-    # TODO: Implement upload/download as adapters; support ClearML
+    def save_to_file(self, file_path: Path, *args, **kwargs):
+        self.algorithm.save_to_file(file_path=file_path)
 
-    def upload_to_huggingface_hub(
+    def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict] = None, *args, **kwargs):
+        # TODO: Find a way to load *newly specified* algorithm_parameters into algorithm
+        self.algorithm.load_from_file(file_path, algorithm_parameters=algorithm_parameters)
+
+    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
+    def upload(
         self,
         repository_id: Text,
         evaluation_environment: Environment,
         environment_name: Text,
-        model_file_name: Text,
+        file_name: Text,
         model_architecture: Text,
         commit_message: Text,
         n_eval_episodes: int,
+        *args,
+        **kwargs,
     ):
-        """
-        Evaluate, Generate a video and Upload a model to Hugging Face Hub.
-        This method does the complete pipeline:
-        - It evaluates the model
-        - It generates the model card
-        - It generates a replay video of the agent
-        - It pushes everything to the Hub
-
-        Args:
-            repository_id (Text): Id of the model repository from the Hugging Face Hub.
-            evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            environment_name (Text): Name of the environment (only used for the model card).
-            model_file_name (Text): Name of the model (uploaded model .pkl will be named accordingly).
-            model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
-            commit_message (Text): Commit message for the HuggingFace repository commit.
-            n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
-        """
-
-        _, repo_name = repository_id.split("/")
-
-        eval_env = evaluation_environment
-        api = HfApi()
-
-        # Step 1: Create the repo
-        repo_url = api.create_repo(
-            repo_id=repository_id,
-            exist_ok=True,
-        )
-
-        # Step 2: Download files
-        repo_local_path = Path(snapshot_download(repo_id=repository_id))
-
-        # Step 3: Save the model
-        self.algorithm.save(repo_local_path / model_file_name)
-
-        # Step 4: Evaluate the model and build JSON with evaluation metrics
-        mean_reward, std_reward = evaluate_agent(
+        upload_to_huggingface_hub(
             agent=self,
-            evaluation_environment=eval_env,
+            evaluation_environment=evaluation_environment,
+            repository_id=repository_id,
+            environment_name=environment_name,
+            file_name=file_name,
+            model_architecture=model_architecture,
+            commit_message=commit_message,
             n_eval_episodes=n_eval_episodes,
         )
 
-        evaluate_data = {
-            "env_id": environment_name,
-            "mean_reward": mean_reward,
-            "n_eval_episodes": n_eval_episodes,
-            "eval_datetime": datetime.datetime.now().isoformat(),
-        }
-
-        # Write a JSON file called "results.json" that will contain the
-        # evaluation results
-        with open(repo_local_path / "results.json", "w") as outfile:
-            json.dump(evaluate_data, outfile)
-
-        # Step 5: Create the model card
-        metadata = {"tags": [environment_name, "reinforcement-learning", "custom-implementation"]}
-
-        # Add metrics
-        metadata_eval = metadata_eval_result(
-            model_pretty_name=repo_name,
-            task_pretty_name="reinforcement-learning",
-            task_id="reinforcement-learning",
-            metrics_pretty_name="mean_reward",
-            metrics_id="mean_reward",
-            metrics_value=f"{mean_reward:.2f} +/- {std_reward:.2f}",
-            dataset_pretty_name=environment_name,
-            dataset_id=environment_name,
-        )
-
-        # Merges both dictionaries
-        metadata = {**metadata, **metadata_eval}
-
-        model_card = f"""
-        # Custom implemented agent playing *{environment_name}*
-        This is a trained model of an agent playing *{environment_name}* .
-        The agent was trained with a {model_architecture} algorithm.
-
-        ## Usage
-
-        ```python
-
-        model = load_from_hub(repo_id="{repository_id}")
-
-        # Don't forget to check if you need to add additional attributes
-        env = gym.make(model["env_id"])
-        ```
-        """
-
-        readme_path = repo_local_path / "README.md"
-        print(readme_path.exists())
-        if readme_path.exists():
-            with readme_path.open("r", encoding="utf8") as f:
-                readme = f.read()
-        else:
-            readme = model_card
-
-        with readme_path.open("w", encoding="utf-8") as f:
-            f.write(readme)
-
-        # Save our metrics to Readme metadata
-        metadata_save(readme_path, metadata)
-
-        # Step 6: Record a video
-        video_path = repo_local_path / "replay.mp4"
-        record_video(agent=self, evaluation_environment=evaluation_environment, file_path=video_path, fps=1)
-
-        # Step 7. Push everything to the Hub
-        api.upload_folder(
-            repo_id=repository_id,
-            folder_path=repo_local_path,
-            path_in_repo=".",
-            commit_message=commit_message,
-        )
-
-        print("Your model is pushed to the Hub. You can view your model here: ", repo_url)
-
-    def download_from_huggingface_hub(
-        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None
+    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
+    def download(
+        self, repository_id: Text, file_name: Text, algorithm_parameters: Optional[Dict] = None, *args, **kwargs
     ):
-        """
-        Download a reinforcement learning model from the HuggingFace Hub and update the .algorithm attribute in-place.
-
-        Args:
-            repository_id (Text): Model repository ID from the HF Hub of the RL model we want to download.
-            filename (Text): The model filename located in the hugging face repository.
-            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
-
-        """
-
-        # Get the model from the Hub, download and cache the model on your local disk
-        pickle_model = hf_hub_download(repo_id=repository_id, filename=filename)
-        self.algorithm.load(pickle_model)
-        # TODO: Find a way to load algorithm_parameters into algorithm
+        download_from_huggingface_hub(
+            agent=self,
+            repository_id=repository_id,
+            file_name=file_name,
+            algorithm_parameters=algorithm_parameters,
+        )

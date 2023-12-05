@@ -1,1 +1,3 @@
-from .util import evaluate_agent, record_video
+from .evaluating import evaluate_agent
+from .saving_and_loading import download_from_huggingface_hub, upload_to_huggingface_hub
+from .video_recording import record_video
