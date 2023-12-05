@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download(repository_id=REPO_ID, filename="algorithm.zip")
+        agent.download(repository_id=REPO_ID, file_name="algorithm.zip")
 
     else:
         # Train agent
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         evaluation_environment=environments[0],
         environment_name=ENV_ID,
         model_architecture=MODEL_ARCHITECTURE,
-        model_file_name="algorithm.zip",
+        file_name="algorithm.zip",
         commit_message=COMMIT_MESSAGE,
         n_eval_episodes=50,
     )

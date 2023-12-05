@@ -25,11 +25,11 @@ class Agent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def save_to_file(self, file: Path, *args, **kwargs) -> None:
+    def save_to_file(self, file_path: Path, *args, **kwargs) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def load_from_file(self, file: Path, algorithm_parameters: Optional[Dict], *args, **kwargs) -> None:
+    def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict], *args, **kwargs) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -38,17 +38,15 @@ class Agent(ABC):
         repository_id: Text,
         evaluation_environment: Environment,
         environment_name: Text,
-        model_name: Text,
+        file_name: Text,
         model_architecture: Text,
         commit_message: Text,
         n_eval_episodes: int,
-        *args,
-        **kwargs,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     def download(
-        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict], *args, **kwargs
+        self, repository_id: Text, file_name: Text, algorithm_parameters: Optional[Dict]
     ) -> None:
         raise NotImplementedError

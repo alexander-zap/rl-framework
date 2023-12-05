@@ -130,7 +130,7 @@ class StableBaselinesAgent(Agent):
         repository_id: Text,
         evaluation_environment: Environment,
         environment_name: Text,
-        model_file_name: Text,
+        file_name: Text,
         model_architecture: Text,
         commit_message: Text,
         n_eval_episodes: int,
@@ -142,7 +142,7 @@ class StableBaselinesAgent(Agent):
             evaluation_environment=evaluation_environment,
             repository_id=repository_id,
             environment_name=environment_name,
-            file_name=model_file_name,
+            file_name=file_name,
             model_architecture=model_architecture,
             commit_message=commit_message,
             n_eval_episodes=n_eval_episodes,
@@ -150,18 +150,18 @@ class StableBaselinesAgent(Agent):
 
     # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
     def download(
-        self, repository_id: Text, filename: Text, algorithm_parameters: Optional[Dict] = None, *args, **kwargs
+        self, repository_id: Text, file_name: Text, algorithm_parameters: Optional[Dict] = None, *args, **kwargs
     ):
         """
         Download a reinforcement learning model from the HuggingFace Hub and update the agent policy in-place.
 
         Args:
             repository_id (Text): Repository ID of the reinforcement learning model we want to download.
-            filename (Text): The model filename (file ending with .zip) located in the hugging face repository.
+            file_name (Text): The model filename (file ending with .zip) located in the hugging face repository.
             algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
 
         """
 
         download_from_huggingface_hub(
-            agent=self, repository_id=repository_id, file_name=filename, algorithm_parameters=algorithm_parameters
+            agent=self, repository_id=repository_id, file_name=file_name, algorithm_parameters=algorithm_parameters
         )
