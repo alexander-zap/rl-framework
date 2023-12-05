@@ -2,7 +2,7 @@ import logging
 import pickle
 import random
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Optional
 
 import numpy as np
 from tqdm import tqdm
@@ -163,15 +163,21 @@ class QLearning(Algorithm):
         Args:
             file_path (Text): Path where the model should be saved to.
         """
+        # TODO: Save other parameters as well (do not only save Q-table)
         with open(file_path, "wb") as f:
             pickle.dump(self.q_table, f)
 
-    def load_from_file(self, file_path: Path, *args, **kwargs):
+    def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict] = None, *args, **kwargs):
         """
         Load the action-prediction model (Q-Table) from a previously created (by the .save function) pickle file.
 
          Args:
             file_path (Text): Path where the model has been previously saved to.
+            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded agent-algorithm.
         """
         with open(file_path, "rb") as f:
             self.q_table = pickle.load(f)
+
+        for key, value in algorithm_parameters.items():
+            if hasattr(self, key):
+                setattr(self, key, value)

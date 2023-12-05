@@ -83,10 +83,20 @@ class CustomAgent(Agent):
         return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
     def save_to_file(self, file_path: Path, *args, **kwargs):
+        """ Save the agent to a file at a certain path (to be loadable again later).
+
+        Args:
+            file_path: File where the agent should be saved to.
+        """
         self.algorithm.save_to_file(file_path=file_path)
 
     def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict] = None, *args, **kwargs):
-        # TODO: Find a way to load *newly specified* algorithm_parameters into algorithm
+        """ Load the agent from a previously save agent-file.
+
+        Args:
+            file_path: File where the agent-file to be loaded is located at.
+            algorithm_parameters (Optional[Dict]): Parameters which should overwrite the algorithm after loading.
+        """
         self.algorithm.load_from_file(file_path, algorithm_parameters=algorithm_parameters)
 
     # TODO: Change to support adapters (e.g., ClearML, HuggingFace)

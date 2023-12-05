@@ -19,5 +19,5 @@ class Algorithm(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def load_from_file(self, file_path, *args, **kwargs):
+    def load_from_file(self, file_path, algorithm_parameters, *args, **kwargs):
         raise NotImplementedError
