@@ -83,7 +83,7 @@ class CustomAgent(Agent):
         return self.algorithm.choose_action(observation=observation, *args, **kwargs)
 
     def save_to_file(self, file_path: Path, *args, **kwargs):
-        """ Save the agent to a file at a certain path (to be loadable again later).
+        """Save the agent to a file at a certain path (to be loadable again later).
 
         Args:
             file_path: File where the agent should be saved to.
@@ -91,7 +91,7 @@ class CustomAgent(Agent):
         self.algorithm.save_to_file(file_path=file_path)
 
     def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict] = None, *args, **kwargs):
-        """ Load the agent from a previously save agent-file.
+        """Load the agent from a previously save agent-file.
 
         Args:
             file_path: File where the agent-file to be loaded is located at.

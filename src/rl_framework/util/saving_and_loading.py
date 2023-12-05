@@ -132,11 +132,7 @@ agent.download(repository_id=repository_id, filename=file_name)
         f.write(readme)
 
     metadata = {
-        "tags": [
-            environment_name,
-            "reinforcement-learning",
-            "rl-framework"
-        ],
+        "tags": [environment_name, "reinforcement-learning", "rl-framework"],
     }
 
     # Add metrics
