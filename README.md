@@ -55,7 +55,7 @@ In short:
 To integrate your environment you wish to train on, you need to create an Environment class representing your problem. For this you can
 - you use an existing Gym environment with [the `GymEnvironment` class](src/rl_framework/environment/gym_environment.py)
 - you use an existing MLAgent environment with [the `MLAgentsEnvironment` class](src/rl_framework/environment/mlagents_environment.py)
-- create a custom environment by inheriting from [the base `Environment` class](src/rl_framework/environment/environment.py), which specifies the required interface
+- create a custom environment by inheriting from [the base `Environment` class](src/rl_framework/environment/base_environment.py), which specifies the required interface
 
 ### Configuring an agent
 To integrate the Reinforcement Learning algorithm you wish to train an agent on your environment with, you need to create an Agent class representing your training agent. For this you can
@@ -83,7 +83,7 @@ evaluate_agent(agent=agent, evaluation_environment=environment)
 ### Uploading and downloading models from the HuggingFace Hub
 
 Once you trained the agent, you can upload the agent model to the HuggingFace Hub in order to share and compare your agent to others. You can also downloaded yours or other agents from the same HuggingFace Hub and use them for solving environments or re-training.
-The methods which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util saving and loading functions](src/rl_framework/util/saving_and_loading.py).
+The methods which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util saving and loading functions](src/rl_framework/util/saving_and_loading/saving_and_loading.py).
 
 ### Example
 
