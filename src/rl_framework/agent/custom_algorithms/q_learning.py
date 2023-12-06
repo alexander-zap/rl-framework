@@ -178,6 +178,7 @@ class QLearning(Algorithm):
         with open(file_path, "rb") as f:
             self.q_table = pickle.load(f)
 
-        for key, value in algorithm_parameters.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+        if algorithm_parameters:
+            for key, value in algorithm_parameters.items():
+                if hasattr(self, key):
+                    setattr(self, key, value)
