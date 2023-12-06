@@ -1,10 +1,9 @@
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Text
+from typing import Dict, List, Optional
 
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
-from rl_framework.util import download_from_huggingface_hub, upload_to_huggingface_hub
 
 from .custom_algorithms import QLearning
 
@@ -98,38 +97,3 @@ class CustomAgent(Agent):
             algorithm_parameters (Optional[Dict]): Parameters which should overwrite the algorithm after loading.
         """
         self.algorithm.load_from_file(file_path, algorithm_parameters=algorithm_parameters)
-
-    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
-    def upload(
-        self,
-        repository_id: Text,
-        evaluation_environment: Environment,
-        environment_name: Text,
-        file_name: Text,
-        model_architecture: Text,
-        commit_message: Text,
-        n_eval_episodes: int,
-        *args,
-        **kwargs,
-    ):
-        upload_to_huggingface_hub(
-            agent=self,
-            evaluation_environment=evaluation_environment,
-            repository_id=repository_id,
-            environment_name=environment_name,
-            file_name=file_name,
-            model_architecture=model_architecture,
-            commit_message=commit_message,
-            n_eval_episodes=n_eval_episodes,
-        )
-
-    # TODO: Change to support adapters (e.g., ClearML, HuggingFace)
-    def download(
-        self, repository_id: Text, file_name: Text, algorithm_parameters: Optional[Dict] = None, *args, **kwargs
-    ):
-        download_from_huggingface_hub(
-            agent=self,
-            repository_id=repository_id,
-            file_name=file_name,
-            algorithm_parameters=algorithm_parameters,
-        )

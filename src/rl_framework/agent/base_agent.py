@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional, Text
+from typing import Dict, List, Optional
 
 from rl_framework.agent.custom_algorithms import Algorithm
 from rl_framework.environment import Environment
+from rl_framework.util.saving_and_loading import (
+    Connector,
+    DownloadConfig,
+    UploadConfig,
+    download,
+    upload,
+)
 
 
 class Agent(ABC):
@@ -32,21 +39,43 @@ class Agent(ABC):
     def load_from_file(self, file_path: Path, algorithm_parameters: Optional[Dict], *args, **kwargs) -> None:
         raise NotImplementedError
 
-    @abstractmethod
     def upload(
         self,
-        repository_id: Text,
+        connector: Connector,
+        connector_config: UploadConfig,
         evaluation_environment: Environment,
-        environment_name: Text,
-        file_name: Text,
-        model_architecture: Text,
-        commit_message: Text,
-        n_eval_episodes: int,
     ) -> None:
-        raise NotImplementedError
+        """Evaluate, generate a video and upload the agent to the connector.
 
-    @abstractmethod
+        Args:
+            connector: Connector for uploading.
+            connector_config: Configuration data for connector.
+            evaluation_environment: Environment used for final evaluation and clip creation before upload.
+        """
+        upload(
+            connector=connector,
+            connector_config=connector_config,
+            agent=self,
+            evaluation_environment=evaluation_environment,
+        )
+
     def download(
-        self, repository_id: Text, file_name: Text, algorithm_parameters: Optional[Dict]
-    ) -> None:
-        raise NotImplementedError
+        self,
+        connector: Connector,
+        connector_config: DownloadConfig,
+        algorithm_parameters: Optional[Dict] = None,
+    ):
+        """Download a reinforcement learning model from the connector and update the agent in-place.
+
+        Args:
+            connector: Connector for downloading.
+            connector_config: Configuration data for connector.
+            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
+        """
+
+        download(
+            connector=connector,
+            connector_config=connector_config,
+            agent=self,
+            algorithm_parameters=algorithm_parameters,
+        )

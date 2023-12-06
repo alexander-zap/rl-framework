@@ -3,7 +3,12 @@ import sys
 
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.util import evaluate_agent
+from rl_framework.util import (
+    HuggingFaceConnector,
+    HuggingFaceDownloadConfig,
+    HuggingFaceUploadConfig,
+    evaluate_agent,
+)
 
 # Create logging handler to output logs to stdout
 root = logging.getLogger()
@@ -13,7 +18,6 @@ handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 root.addHandler(handler)
-
 
 ENV_ID = "Taxi-v3"
 MODEL_ARCHITECTURE = "QLearning"
@@ -44,6 +48,17 @@ if __name__ == "__main__":
 
     seeds = None
 
+    connector = HuggingFaceConnector()
+    upload_connector_config = HuggingFaceUploadConfig(
+        repository_id=REPO_ID,
+        environment_name=ENV_ID,
+        file_name="algorithm.pkl",
+        model_architecture=MODEL_ARCHITECTURE,
+        commit_message=COMMIT_MESSAGE,
+        n_eval_episodes=50,
+    )
+    download_connector_config = HuggingFaceDownloadConfig(repository_id=REPO_ID, file_name="algorithm.pkl")
+
     # Create new agent
     agent = CustomAgent(
         algorithm=CustomAlgorithm.Q_LEARNING,
@@ -60,7 +75,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download(repository_id=REPO_ID, file_name="algorithm.pkl")
+        agent.download(connector=connector, connector_config=download_connector_config)
 
     else:
         # Train agent
@@ -87,11 +102,7 @@ if __name__ == "__main__":
 
     # Upload the model
     agent.upload(
-        repository_id=REPO_ID,
+        connector=connector,
+        connector_config=upload_connector_config,
         evaluation_environment=environments[0],
-        environment_name=ENV_ID,
-        model_architecture=MODEL_ARCHITECTURE,
-        file_name="algorithm.pkl",
-        commit_message=COMMIT_MESSAGE,
-        n_eval_episodes=50,
     )

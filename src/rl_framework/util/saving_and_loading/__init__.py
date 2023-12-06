@@ -1,13 +1,12 @@
-from .evaluating import evaluate_agent
-from .saving_and_loading import (
+from .connector import (
     ClearMLConnector,
+    ClearMLUploadConfig,
+    ClearMLDownloadConfig,
     Connector,
     DownloadConfig,
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
     HuggingFaceUploadConfig,
     UploadConfig,
-    download,
-    upload,
 )
-from .video_recording import record_video
+from .saving_and_loading import download, upload

@@ -3,7 +3,12 @@ import sys
 
 from rl_framework.agent import StableBaselinesAgent, StableBaselinesAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.util import evaluate_agent
+from rl_framework.util import (
+    HuggingFaceConnector,
+    HuggingFaceDownloadConfig,
+    HuggingFaceUploadConfig,
+    evaluate_agent,
+)
 
 # Create logging handler to output logs to stdout
 root = logging.getLogger()
@@ -14,12 +19,11 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 root.addHandler(handler)
 
-
 ENV_ID = "Taxi-v3"
 MODEL_ARCHITECTURE = "PPO"
 PARALLEL_ENVIRONMENTS = 32
 
-DOWNLOAD_EXISTING_AGENT = True
+DOWNLOAD_EXISTING_AGENT = False
 REPO_ID = f"zap-thamm/{MODEL_ARCHITECTURE}-{ENV_ID}"
 COMMIT_MESSAGE = f"Upload of a new agent trained with {MODEL_ARCHITECTURE} on {ENV_ID}"
 
@@ -44,6 +48,17 @@ if __name__ == "__main__":
 
     seeds = None
 
+    connector = HuggingFaceConnector()
+    upload_connector_config = HuggingFaceUploadConfig(
+        repository_id=REPO_ID,
+        environment_name=ENV_ID,
+        file_name="algorithm.zip",
+        model_architecture=MODEL_ARCHITECTURE,
+        commit_message=COMMIT_MESSAGE,
+        n_eval_episodes=50,
+    )
+    download_connector_config = HuggingFaceDownloadConfig(repository_id=REPO_ID, file_name="algorithm.zip")
+
     # Create new agent
     agent = StableBaselinesAgent(
         algorithm=StableBaselinesAlgorithm.PPO,
@@ -62,7 +77,7 @@ if __name__ == "__main__":
 
     if DOWNLOAD_EXISTING_AGENT:
         # Download existing agent from repository
-        agent.download(repository_id=REPO_ID, file_name="algorithm.zip")
+        agent.download(connector=connector, connector_config=download_connector_config)
 
     else:
         # Train agent
@@ -76,11 +91,7 @@ if __name__ == "__main__":
 
     # Upload the model
     agent.upload(
-        repository_id=REPO_ID,
+        connector=connector,
+        connector_config=upload_connector_config,
         evaluation_environment=environments[0],
-        environment_name=ENV_ID,
-        model_architecture=MODEL_ARCHITECTURE,
-        file_name="algorithm.zip",
-        commit_message=COMMIT_MESSAGE,
-        n_eval_episodes=50,
     )
