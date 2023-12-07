@@ -1,10 +1,15 @@
+import logging
 import os
 import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
+import stable_baselines3
+from clearml import Task
+
 from rl_framework.util import evaluate_agent
+from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
 
@@ -12,7 +17,7 @@ from .base_connector import Connector, DownloadConfig, UploadConfig
 @dataclass
 class ClearMLUploadConfig(UploadConfig):
     """
-            n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
+    n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
     """
 
     n_eval_episodes: int
@@ -20,11 +25,15 @@ class ClearMLUploadConfig(UploadConfig):
 
 @dataclass
 class ClearMLDownloadConfig(DownloadConfig):
-    pass
+    """
+    task_id (str): Id of the existing ClearML task to download the agent from
+    """
+
+    task_id: str
 
 
 class ClearMLConnector(Connector):
-    def __init__(self, task):
+    def __init__(self, task: Task):
         """
         Initialize the connector and pass a ClearML Task object for tracking parameters/artifacts/results.
 
@@ -44,16 +53,24 @@ class ClearMLConnector(Connector):
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
         """
+        logging.info(
+            "This function will evaluate the performance of your agent and log the model as well as the experiment "
+            "results as artifacts to ClearML. Also, a video of the agent's performance on the evaluation environment "
+            "will be generated and uploaded to the 'Debug Sample' section of the ClearML experiment."
+        )
 
-        # Save agent to temporary path and upload folder to ClearML
+        # Step 1: Save agent to temporary path and upload .zip file to ClearML
         with tempfile.TemporaryDirectory() as temp_path:
-            agent_save_path = Path(os.path.join(temp_path, "agent"))
+            logging.debug(f"Saving agent to .zip file at {temp_path} and uploading artifact ...")
+            # TODO: This only works for SB3
+            agent_save_path = Path(os.path.join(temp_path, "agent.zip"))
             agent.save_to_file(agent_save_path)
             while not os.path.exists(agent_save_path):
                 time.sleep(1)
             self.task.upload_artifact(name="agent", artifact_object=temp_path)
 
-        # Evaluate the agent and build a JSON with evaluation metrics
+        # Step 2: Evaluate the agent and upload a dictionary with evaluation metrics
+        logging.debug("Evaluating agent and uploading experiment results ...")
         mean_reward, std_reward = evaluate_agent(
             agent=agent,
             evaluation_environment=evaluation_environment,
@@ -65,5 +82,29 @@ class ClearMLConnector(Connector):
         }
         self.task.upload_artifact(name="experiment_result", artifact_object=experiment_result)
 
+        # Step 3: Create a system info dictionary and upload it
+        logging.debug("Uploading system meta information ...")
+        system_info, _ = stable_baselines3.get_system_info()
+        self.task.upload_artifact(name="system_info", artifact_object=system_info)
+
+        # Step 4: Record a video and log local video file
+        temp_path = tempfile.mkdtemp()
+        logging.debug(f"Recording video to {temp_path} and uploading as debug sample ...")
+        video_path = Path(temp_path) / "replay.mp4"
+        record_video(
+            agent=agent,
+            evaluation_environment=evaluation_environment,
+            file_path=video_path,
+            fps=1,
+            video_length=1000,
+            sb3_replay=False,
+        )
+        self.task.get_logger().report_media(
+            "video ", "agent-in-environment recording", iteration=1, local_path=video_path
+        )
+
+        # TODO: Save README.md
+
+    # TODO Implement downloading logic
     def download(self, connector_config: ClearMLDownloadConfig, *args, **kwargs) -> Path:
         raise NotImplementedError
