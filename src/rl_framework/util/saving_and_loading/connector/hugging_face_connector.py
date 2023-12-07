@@ -134,7 +134,11 @@ class HuggingFaceConnector(Connector):
 
         # Step 6: Create the model card (README.md)
 
-        # TODO: Format with correct agent class and agent algorithm in code part
+        agent_class_name = type(agent).__qualname__
+        # FIXME: This is just a work-around.
+        #  The real algorithm class (instead of `model_architecture`) and enum class name should be passed.
+        algorithm_enum_class_name = type(agent).__qualname__.replace("Agent", "Algorithm")
+
         model_card = f"""
         # Custom implemented {model_architecture} agent playing on *{environment_name}*
 
@@ -142,13 +146,20 @@ class HuggingFaceConnector(Connector):
         The agent was trained with a {model_architecture} algorithm and evaluated for {n_eval_episodes} episodes.
         See further agent and evaluation metadata in the according README section.
 
+
+        ## Import
+        The Python module used for training and uploading/downloading is [rl-framework](https://github.com/alexander-zap/rl-framework).
+        It is an easy-to-read, plug-and-use Reinforcement Learning framework and provides standardized interfaces and implementations to various Reinforcement Learning methods and environments.
+        Also it provides connectors for the upload and download to popular model version control systems, including the HuggingFace Hub.
+
         ## Usage
+        from rl-framework import {agent_class_name}, {algorithm_enum_class_name}
 
         ```python
 
         # Create new agent instance
-        agent = CustomAgent(
-            algorithm=CustomAlgorithm.Q_LEARNING,   # Replace with the algorithm of the agent to be downloaded
+        agent = {agent_class_name}(
+            algorithm={algorithm_enum_class_name}.{model_architecture}
             algorithm_parameters={{
                 ...
             }},
@@ -160,6 +171,8 @@ class HuggingFaceConnector(Connector):
         agent.download(repository_id=repository_id, filename=file_name)
 
         ```
+
+        Further examples can be found in the [exploration section of the rl-framework repository](https://github.com/alexander-zap/rl-framework/tree/main/exploration).
         """
 
         readme_path = repo_local_path / "README.md"
