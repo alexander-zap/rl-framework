@@ -19,7 +19,10 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 root.addHandler(handler)
 
+# TODO: Use configs instead of manual setting of variables in scripts
+
 ENV_ID = "Taxi-v3"
+# FIXME: This should be set by config and should be used for automatic setting of algorithm
 MODEL_ARCHITECTURE = "QLearning"
 PARALLEL_ENVIRONMENTS = 32
 
