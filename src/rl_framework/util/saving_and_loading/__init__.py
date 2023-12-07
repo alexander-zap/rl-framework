@@ -1,7 +1,7 @@
 from .connector import (
     ClearMLConnector,
-    ClearMLUploadConfig,
     ClearMLDownloadConfig,
+    ClearMLUploadConfig,
     Connector,
     DownloadConfig,
     HuggingFaceConnector,
