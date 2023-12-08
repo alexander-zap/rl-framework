@@ -151,7 +151,9 @@ class QLearning(Algorithm):
                     tqdm_progress_bar.refresh()
                     # Gradually reduce epsilon after every done episode
                     self.epsilon = (
-                        2.0 * current_timestep / total_timesteps if self.epsilon > self.epsilon_min else self.epsilon
+                        1.0 - (2.0 * current_timestep / total_timesteps)
+                        if self.epsilon > self.epsilon_min
+                        else self.epsilon
                     )
 
         tqdm_progress_bar.close()
