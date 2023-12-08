@@ -35,6 +35,7 @@ class ClearMLDownloadConfig(DownloadConfig):
     task_id: str
     file_name: str
 
+
 class ClearMLConnector(Connector):
     def __init__(self, task: Task):
         """
@@ -121,4 +122,3 @@ class ClearMLConnector(Connector):
         preprocess_task = Task.get_task(task_id=task_id, project_name=project_name)
         file_path = preprocess_task.artifacts["agent"].get_local_copy()
         return Path(file_path) / file_name
-
