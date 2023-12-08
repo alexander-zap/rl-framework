@@ -17,9 +17,11 @@ from .base_connector import Connector, DownloadConfig, UploadConfig
 @dataclass
 class ClearMLUploadConfig(UploadConfig):
     """
+    file_name (str): File name of agent to be saved to
     n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
     """
 
+    file_name: str
     n_eval_episodes: int
 
 
@@ -27,10 +29,11 @@ class ClearMLUploadConfig(UploadConfig):
 class ClearMLDownloadConfig(DownloadConfig):
     """
     task_id (str): Id of the existing ClearML task to download the agent from
+    file_name (str): File name of previously saved agent
     """
 
     task_id: str
-
+    file_name: str
 
 class ClearMLConnector(Connector):
     def __init__(self, task: Task):
@@ -53,6 +56,11 @@ class ClearMLConnector(Connector):
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
         """
+        file_name = connector_config.file_name
+        n_eval_episodes = connector_config.n_eval_episodes
+
+        assert file_name, n_eval_episodes
+
         logging.info(
             "This function will evaluate the performance of your agent and log the model as well as the experiment "
             "results as artifacts to ClearML. Also, a video of the agent's performance on the evaluation environment "
@@ -62,8 +70,7 @@ class ClearMLConnector(Connector):
         # Step 1: Save agent to temporary path and upload .zip file to ClearML
         with tempfile.TemporaryDirectory() as temp_path:
             logging.debug(f"Saving agent to .zip file at {temp_path} and uploading artifact ...")
-            # TODO: This only works for SB3
-            agent_save_path = Path(os.path.join(temp_path, "agent.zip"))
+            agent_save_path = Path(os.path.join(temp_path, file_name))
             agent.save_to_file(agent_save_path)
             while not os.path.exists(agent_save_path):
                 time.sleep(1)
@@ -74,7 +81,7 @@ class ClearMLConnector(Connector):
         mean_reward, std_reward = evaluate_agent(
             agent=agent,
             evaluation_environment=evaluation_environment,
-            n_eval_episodes=100,
+            n_eval_episodes=n_eval_episodes,
         )
         experiment_result = {
             "mean_reward": round(mean_reward, 2),
@@ -100,6 +107,18 @@ class ClearMLConnector(Connector):
 
         # TODO: Save README.md
 
-    # TODO Implement downloading logic
     def download(self, connector_config: ClearMLDownloadConfig, *args, **kwargs) -> Path:
-        raise NotImplementedError
+        task_id = connector_config.task_id
+        file_name = connector_config.file_name
+
+        assert task_id, file_name
+
+        # Get previous task of same project
+        project_name = self.task.get_project_name()
+
+        logging.debug(f"Downloading agent from Task with project name {project_name} and task id {task_id} ...")
+        # Download previously uploaded agent
+        preprocess_task = Task.get_task(task_id=task_id, project_name=project_name)
+        file_path = preprocess_task.artifacts["agent"].get_local_copy()
+        return Path(file_path) / file_name
+
