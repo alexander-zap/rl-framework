@@ -92,12 +92,7 @@ class ClearMLConnector(Connector):
         logging.debug(f"Recording video to {temp_path} and uploading as debug sample ...")
         video_path = Path(temp_path) / "replay.mp4"
         record_video(
-            agent=agent,
-            evaluation_environment=evaluation_environment,
-            file_path=video_path,
-            fps=1,
-            video_length=1000,
-            sb3_replay=False,
+            agent=agent, evaluation_environment=evaluation_environment, file_path=video_path, fps=1, video_length=1000
         )
         self.task.get_logger().report_media(
             "video ", "agent-in-environment recording", iteration=1, local_path=video_path

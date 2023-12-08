@@ -8,9 +8,8 @@ import numpy as np
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, VecVideoRecorder
 
 
-# TODO: use video_length for simple replay and use video_length *correctly* for SB3-replay
 def record_video(
-    agent, evaluation_environment, file_path: Path, fps: int = 1, video_length=1000, sb3_replay: bool = False
+    agent, evaluation_environment, file_path: Path, fps: int = 1, video_length=1000, sb3_replay: bool = True
 ):
     """
     Generate a replay video of the agent.
@@ -26,26 +25,7 @@ def record_video(
             If False: Use simple recording method (saving RGB outputs from environment render)
     """
 
-    if not sb3_replay:
-        images = []
-        done = False
-        observation, _ = evaluation_environment.reset()
-        img = evaluation_environment.render()
-        images.append(img)
-        while not done:
-            action = agent.choose_action(observation)
-            (
-                observation,
-                reward,
-                terminated,
-                truncated,
-                info,
-            ) = evaluation_environment.step(action)
-            done = terminated or truncated
-            img = evaluation_environment.render()
-            images.append(img)
-        imageio.mimsave(file_path, [np.array(img) for i, img in enumerate(images)], fps=fps)
-    else:
+    if sb3_replay:
         # Create a Stable-baselines3 vector environment (VecEnv)
         if not isinstance(evaluation_environment, VecEnv):
             evaluation_environment = DummyVecEnv([lambda: evaluation_environment])
@@ -61,12 +41,14 @@ def record_video(
                 name_prefix="",
             )
 
-            obs = env.reset()
+            vectorized_observation = env.reset()
 
             try:
+                # Note: Vectorized environments are automatically reset at the end of each episode.
                 for _ in range(video_length):
-                    action = agent.algorithm.choose_action(obs)
-                    obs, _, _, _ = env.step(np.array([action]))
+                    action = agent.choose_action(vectorized_observation[0])
+                    vectorized_action = np.array([action])
+                    vectorized_observation, _, _, _ = env.step(vectorized_action)
 
                 # Save the video
                 env.close()
@@ -80,3 +62,23 @@ def record_video(
                 pass
             except Exception as e:
                 logging.error(str(e))
+    else:
+        images = []
+        while len(images) < video_length:
+            done = False
+            observation, _ = evaluation_environment.reset()
+            img = evaluation_environment.render()
+            images.append(img)
+            while not done:
+                action = agent.choose_action(observation)
+                (
+                    observation,
+                    reward,
+                    terminated,
+                    truncated,
+                    info,
+                ) = evaluation_environment.step(action)
+                done = terminated or truncated
+                img = evaluation_environment.render()
+                images.append(img)
+        imageio.mimsave(file_path, [np.array(img) for i, img in enumerate(images)], fps=fps)

@@ -215,12 +215,7 @@ Further examples can be found in the [exploration section of the rl-framework re
         # Step 6: Record a video
         video_path = repo_local_path / "replay.mp4"
         record_video(
-            agent=agent,
-            evaluation_environment=evaluation_environment,
-            file_path=video_path,
-            fps=1,
-            video_length=1000,
-            sb3_replay=False,
+            agent=agent, evaluation_environment=evaluation_environment, file_path=video_path, fps=1, video_length=1000
         )
 
         logging.info(f"Pushing repo {repository_id} to the Hugging Face Hub")
