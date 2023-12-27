@@ -106,7 +106,10 @@ def remote_environment(cls: type):
             """
 
         def __del__(self):
+            self.remote_environment.__del__()
             self.connection.send(dm_env_rpc_pb2.DestroyWorldRequest(world_name=self.world_name))
+            super(self.connection).close()
+            self.connection.close()
             self.server.stop(None)
 
     return RemoteEnvironment
