@@ -3,7 +3,7 @@ import sys
 
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.environment.remote_gym_environment import RemoteGymEnvironment
+from rl_framework.environment.remote_gym_environment import remote_environment
 from rl_framework.util import (
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
@@ -36,8 +36,9 @@ N_EVALUATION_EPISODES = 100
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [RemoteGymEnvironment() for _ in range(PARALLEL_ENVIRONMENTS)]
-    # environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
+    environments = [
+        remote_environment(GymEnvironmentWrapper)(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)
+    ]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
