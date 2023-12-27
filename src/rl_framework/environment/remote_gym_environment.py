@@ -105,6 +105,7 @@ def remote_environment(cls: type):
             Renders the environment.
             """
 
+        # FIXME: Does not trigger in main-file, investigate.
         def __del__(self):
             self.remote_environment.__del__()
             self.connection.send(dm_env_rpc_pb2.DestroyWorldRequest(world_name=self.world_name))
