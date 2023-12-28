@@ -1,16 +1,17 @@
 import logging
 import sys
 
+from clearml import Task
+
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
     ClearMLConnector,
-    ClearMLUploadConfig,
     ClearMLDownloadConfig,
+    ClearMLUploadConfig,
     evaluate_agent,
 )
-from clearml import Task
 
 # Create logging handler to output logs to stdout
 root = logging.getLogger()
@@ -67,10 +68,7 @@ if __name__ == "__main__":
         file_name="agent.pkl",
         n_eval_episodes=50,
     )
-    download_connector_config = ClearMLDownloadConfig(
-        task_id="11d8c9be82cf4e35ade2a34f4dc4e066",
-        file_name="agent.pkl"
-    )
+    download_connector_config = ClearMLDownloadConfig(task_id="11d8c9be82cf4e35ade2a34f4dc4e066", file_name="agent.pkl")
 
     # Create new agent
     agent = CustomAgent(
@@ -92,7 +90,9 @@ if __name__ == "__main__":
 
     else:
         # Train agent
-        agent.train(training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS, logging_connector=connector)
+        agent.train(
+            training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS, logging_connector=connector
+        )
 
     # Evaluate the model
     mean_reward, std_reward = evaluate_agent(
