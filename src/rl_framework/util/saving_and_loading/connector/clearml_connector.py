@@ -4,6 +4,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import SupportsFloat, Text
 
 import stable_baselines3
 from clearml import Task
@@ -45,7 +46,23 @@ class ClearMLConnector(Connector):
             task (Task): Active task object to track parameters/artifacts/results in the experiment run(s).
                 See https://clear.ml/docs/latest/docs/clearml_sdk/task_sdk/ on how to use tasks for your purposes.
         """
+        super().__init__()
         self.task = task
+
+    def log_value(self, timestep: int, value_scalar: SupportsFloat, value_name: Text) -> None:
+        """
+        Log scalar value to create a sequence of values over time steps.
+        Will appear in the "Scalar" section of the ClearML experiment page.
+
+        Args:
+            timestep: Time step which the scalar value corresponds to (x-value)
+            value_scalar: Scalar value which should be logged (y-value)
+            value_name: Name of scalar value (e.g., "avg. sum of reward")
+        """
+        super().__init__()
+        self.task.get_logger().report_scalar(
+            title=value_name, series=value_name, value=value_scalar, iteration=timestep
+        )
 
     def upload(self, connector_config: ClearMLUploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
         """Evaluate the agent on the evaluation environment and generate a video.
