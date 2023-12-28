@@ -12,6 +12,8 @@ from dm_env_rpc.v1 import (
     tensor_spec_utils,
 )
 from google.rpc import code_pb2, status_pb2
+from gymnasium.spaces import Space
+from numpy.dtypes import Int64DType
 
 from rl_framework.environment import Environment
 
@@ -104,6 +106,7 @@ def remote_environment(cls: type):
             """
             Renders the environment.
             """
+            # TODO: Render remote environments. Currently not possible.
 
         # FIXME: Does not trigger in main-file, investigate.
         def __del__(self):
@@ -122,12 +125,39 @@ class RemoteEnvironmentService(dm_env_rpc_pb2_grpc.EnvironmentServicer):
     def __init__(self, environment: Environment):
         self.environment = environment
 
+        def space_to_shape_and_dtype(space: Space) -> Tuple:
+            """
+
+            Args:
+                space: Gymnasium Space object for definition of observation spaces
+
+            Returns:
+                Tuple
+                    - TensorSpec.shape
+                    - TensorSpec.dtype
+
+            """
+            # TODO: Better test for discrete
+            if isinstance(space.dtype, Int64DType):
+                dtype = dm_env_rpc_pb2.INT64
+            else:
+                dtype = dm_env_rpc_pb2.FLOAT
+
+            if not space.shape:
+                shape = []
+            else:
+                shape = space.shape
+
+            return shape, dtype
+
+        observation_shape, observation_dtype = space_to_shape_and_dtype(self.environment.observation_space)
+        action_shape, action_dtype = space_to_shape_and_dtype(self.environment.action_space)
+
         self.observation_spec = {
             1: dm_env_rpc_pb2.TensorSpec(
                 name="observation",
-                # FIXME: Hardcoded (Discrete space equals [] shape; variable dtype)
-                shape=[],
-                dtype=dm_env_rpc_pb2.INT32,
+                shape=observation_shape,
+                dtype=observation_dtype,
             ),
             2: dm_env_rpc_pb2.TensorSpec(name="reward", dtype=dm_env_rpc_pb2.FLOAT),
         }
@@ -140,9 +170,8 @@ class RemoteEnvironmentService(dm_env_rpc_pb2_grpc.EnvironmentServicer):
         self.action_spec = {
             1: dm_env_rpc_pb2.TensorSpec(
                 name="action",
-                # FIXME: Hardcoded (Discrete space equals [] shape; variable dtype)
-                shape=[],
-                dtype=dm_env_rpc_pb2.INT8,
+                shape=action_shape,
+                dtype=action_dtype,
             )
         }
 

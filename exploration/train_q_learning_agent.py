@@ -3,7 +3,7 @@ import sys
 
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.environment.remote_gym_environment import remote_environment
+from rl_framework.environment.remote_environment import remote_environment
 from rl_framework.util import (
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
@@ -24,7 +24,7 @@ root.addHandler(handler)
 
 ENV_ID = "Taxi-v3"
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
-MODEL_ARCHITECTURE = "QLearning"
+MODEL_ARCHITECTURE = "Remote-QLearning"
 PARALLEL_ENVIRONMENTS = 32
 
 DOWNLOAD_EXISTING_AGENT = False
