@@ -3,7 +3,7 @@ import sys
 
 from rl_framework.agent import StableBaselinesAgent, StableBaselinesAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.environment.remote_environment import remote_environment
+from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
@@ -22,7 +22,10 @@ root.addHandler(handler)
 
 # TODO: Use configs instead of manual setting of variables in scripts
 
-ENV_ID = "Taxi-v3"
+ENV_ID = "CarRacing-v2"
+REMOTE_ENVIRONMENT = False
+PORT = 56729
+
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
 MODEL_ARCHITECTURE = "Remote-DQN"
 PARALLEL_ENVIRONMENTS = 32
@@ -36,9 +39,10 @@ N_EVALUATION_EPISODES = 100
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [
-        remote_environment(GymEnvironmentWrapper)(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)
-    ]
+    if REMOTE_ENVIRONMENT:
+        environments = [RemoteEnvironment(url="localhost", port=PORT)]
+    else:
+        environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
@@ -46,7 +50,7 @@ if __name__ == "__main__":
     print("Sample observation", environments[0].observation_space.sample())
 
     print("\n _____ACTION SPACE_____ \n")
-    print("Action Space Shape", environments[0].action_space.n)
+    print("Action Space Shape", environments[0].action_space.shape)
     print("Action Space Sample", environments[0].action_space.sample())
 
     print("\n _____REWARD RANGE_____ \n")

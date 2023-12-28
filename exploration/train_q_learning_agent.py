@@ -3,7 +3,7 @@ import sys
 
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.environment.remote_environment import remote_environment
+from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
@@ -23,6 +23,9 @@ root.addHandler(handler)
 # TODO: Use configs instead of manual setting of variables in scripts
 
 ENV_ID = "Taxi-v3"
+REMOTE_ENVIRONMENT = True
+PORT = 56585
+
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
 MODEL_ARCHITECTURE = "Remote-QLearning"
 PARALLEL_ENVIRONMENTS = 32
@@ -36,9 +39,10 @@ N_EVALUATION_EPISODES = 100
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [
-        remote_environment(GymEnvironmentWrapper)(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)
-    ]
+    if REMOTE_ENVIRONMENT:
+        environments = [RemoteEnvironment(url="localhost", port=PORT)]
+    else:
+        environments = [GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Print some environment information (observation and action space)
     print("_____OBSERVATION SPACE_____ \n")
