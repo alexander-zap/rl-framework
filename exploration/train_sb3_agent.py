@@ -22,7 +22,7 @@ root.addHandler(handler)
 
 # TODO: Use configs instead of manual setting of variables in scripts
 
-ENV_ID = "Taxi-v3"
+ENV_ID = "Blackjack-v1"
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
 MODEL_ARCHITECTURE = "Remote-DQN"
 PARALLEL_ENVIRONMENTS = 32
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     print("Sample observation", environments[0].observation_space.sample())
 
     print("\n _____ACTION SPACE_____ \n")
-    print("Action Space Shape", environments[0].action_space.n)
+    print("Action Space Shape", environments[0].action_space.shape)
     print("Action Space Sample", environments[0].action_space.sample())
 
     print("\n _____REWARD RANGE_____ \n")

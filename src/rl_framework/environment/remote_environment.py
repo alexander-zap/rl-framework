@@ -1,3 +1,4 @@
+import logging
 from concurrent import futures
 from typing import Optional, SupportsFloat, Tuple
 
@@ -13,7 +14,7 @@ from dm_env_rpc.v1 import (
 )
 from google.rpc import code_pb2, status_pb2
 from gymnasium.spaces import Space
-from numpy.dtypes import Int64DType
+from numpy.dtypes import Float32DType, Int64DType, UInt8DType
 
 from rl_framework.environment import Environment
 
@@ -125,39 +126,36 @@ class RemoteEnvironmentService(dm_env_rpc_pb2_grpc.EnvironmentServicer):
     def __init__(self, environment: Environment):
         self.environment = environment
 
-        def space_to_shape_and_dtype(space: Space) -> Tuple:
+        def space_to_dtype(space: Space) -> Tuple:
             """
 
             Args:
                 space: Gymnasium Space object for definition of observation spaces
 
             Returns:
-                Tuple
-                    - TensorSpec.shape
-                    - TensorSpec.dtype
+                TensorSpec.dtype
 
             """
-            # TODO: Better test for discrete
             if isinstance(space.dtype, Int64DType):
                 dtype = dm_env_rpc_pb2.INT64
-            else:
+            elif isinstance(space.dtype, Float32DType):
                 dtype = dm_env_rpc_pb2.FLOAT
-
-            if not space.shape:
-                shape = []
+            elif isinstance(space.dtype, UInt8DType):
+                dtype = dm_env_rpc_pb2.UINT8
             else:
-                shape = space.shape
+                logging.error(
+                    f"Unexpected dtype {space.dtype} of space {space}, cannot convert to TensorSpec-dtype."
+                    f"Support for this dtype can be added at the location of the raised ValueError."
+                )
+                raise ValueError
 
-            return shape, dtype
-
-        observation_shape, observation_dtype = space_to_shape_and_dtype(self.environment.observation_space)
-        action_shape, action_dtype = space_to_shape_and_dtype(self.environment.action_space)
+            return dtype
 
         self.observation_spec = {
             1: dm_env_rpc_pb2.TensorSpec(
                 name="observation",
-                shape=observation_shape,
-                dtype=observation_dtype,
+                shape=self.environment.observation_space.shape,
+                dtype=space_to_dtype(self.environment.observation_space),
             ),
             2: dm_env_rpc_pb2.TensorSpec(name="reward", dtype=dm_env_rpc_pb2.FLOAT),
         }
@@ -170,8 +168,8 @@ class RemoteEnvironmentService(dm_env_rpc_pb2_grpc.EnvironmentServicer):
         self.action_spec = {
             1: dm_env_rpc_pb2.TensorSpec(
                 name="action",
-                shape=action_shape,
-                dtype=action_dtype,
+                shape=self.environment.action_space.shape,
+                dtype=space_to_dtype(self.environment.action_space),
             )
         }
 
