@@ -46,17 +46,6 @@ class HuggingFaceDownloadConfig(DownloadConfig):
 
 
 class HuggingFaceConnector(Connector):
-    def __init__(self):
-        """Initialize connector for uploading or downloading agents from the HuggingFace Hub.
-
-        All attributes which are relevant for uploading or downloading are set in the config object.
-        This is a conscious design decision to enable generic exchange of connectors and prevent the requirements
-        of parameter passing for upload/download method calls.
-
-        For repeated use of the same connector instance, change the attributes of the config object which is passed
-        to the upload/download method.
-        """
-
     def upload(self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, *args, **kwargs):
         """
         Evaluate, generate a video and upload a model to Hugging Face Hub.
@@ -126,6 +115,10 @@ class HuggingFaceConnector(Connector):
         # evaluation results
         with open(repo_local_path / "results.json", "w") as outfile:
             json.dump(evaluate_data, outfile)
+
+        # Additionally write a JSON file for all manually logged training metrics
+        with open(repo_local_path / "training_metrics.json", "w") as outfile:
+            json.dump(self.logging_history, outfile)
 
         # Step 5: Create a system info file
         with open(repo_local_path / "system.json", "w") as outfile:

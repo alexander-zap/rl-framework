@@ -1,13 +1,16 @@
+import tempfile
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.env_util import make_vec_env
 
 from rl_framework.agent import Agent
 from rl_framework.environment import Environment
+from rl_framework.util import Connector
 
 
 class StableBaselinesAlgorithm(Enum):
@@ -55,7 +58,14 @@ class StableBaselinesAgent(Agent):
         self.algorithm = None
         self._algorithm_builder = partial(self.algorithm_class, **algorithm_parameters)
 
-    def train(self, training_environments: List[Environment], total_timesteps: int = 100000, *args, **kwargs):
+    def train(
+        self,
+        training_environments: List[Environment],
+        total_timesteps: int = 100000,
+        logging_connector: Optional[Connector] = None,
+        *args,
+        **kwargs,
+    ):
         """
         Train the instantiated agent on the environment.
 
@@ -68,7 +78,38 @@ class StableBaselinesAgent(Agent):
             training_environments (List[Environment): Environment on which the agent should be trained on.
                 If n_environments is set above 1, multiple environments enables parallel training of an agent.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
+            logging_connector (Connector): Connector for logging metrics on training time.
+                Logging is executed by calling the connector.log method. Calls need to be declared manually in the code.
         """
+
+        class LoggingCallback(BaseCallback):
+            """
+            A custom callback that derives from ``BaseCallback``.
+
+            :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
+            """
+
+            def __init__(self, verbose=0):
+                super().__init__(verbose)
+                self.episode_reward = 0
+
+            def _on_step(self) -> bool:
+                """
+                This method will be called by the model after each call to `env.step()`.
+
+                For child callback (of an `EventCallback`), this will be called
+                when the event is triggered.
+
+                :return: If the callback returns False, training is aborted early.
+                """
+                # Only calculate for first environment (at index 0)
+                self.episode_reward += self.locals["rewards"][0]
+                done = self.locals["dones"][0]
+                if done:
+                    logging_connector.log_value(self.num_timesteps, self.episode_reward, "Episode reward")
+                    self.episode_reward = 0
+
+                return True
 
         environment_iterator = iter(training_environments)
         training_env = make_vec_env(
@@ -76,9 +117,10 @@ class StableBaselinesAgent(Agent):
             n_envs=len(training_environments),
         )
 
-        self.algorithm = self._algorithm_builder(env=training_env)
+        with tempfile.TemporaryDirectory() as temp_path:
+            self.algorithm = self._algorithm_builder(env=training_env, tensorboard_log=temp_path)
 
-        self.algorithm.learn(total_timesteps=total_timesteps)
+        self.algorithm.learn(total_timesteps=total_timesteps, callback=LoggingCallback())
 
     def choose_action(self, observation: object, *args, **kwargs):
         """

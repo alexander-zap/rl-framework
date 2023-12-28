@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
 from rl_framework.environment import Environment
+from rl_framework.util import Connector
 
 
 class QLearning(Algorithm):
@@ -82,6 +83,7 @@ class QLearning(Algorithm):
         self,
         training_environments: List[Environment],
         total_timesteps: int,
+        logging_connector: Optional[Connector] = None,
         *args,
         **kwargs,
     ):
@@ -97,6 +99,8 @@ class QLearning(Algorithm):
             training_environments (List[Environment]): List of environments on which the agent should be trained on.
                 # NOTE: This class only supports training on one environment
             total_timesteps (int): Number of timesteps the agent should train for before terminating the training.
+            logging_connector (Connector): Connector for logging metrics on training time.
+                Logging is executed by calling the connector.log method. Calls need to be declared manually in the code.
         """
 
         # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
@@ -146,6 +150,7 @@ class QLearning(Algorithm):
                 prev_action = action
 
                 if done:
+                    logging_connector.log_value(current_timestep, episode_reward, "Episode reward")
                     current_timestep += episode_timestep
                     tqdm_progress_bar.n = current_timestep if current_timestep <= total_timesteps else total_timesteps
                     tqdm_progress_bar.refresh()
@@ -155,6 +160,7 @@ class QLearning(Algorithm):
                         if self.epsilon > self.epsilon_min
                         else self.epsilon
                     )
+                    logging_connector.log_value(current_timestep, self.epsilon, "Epsilon")
 
         tqdm_progress_bar.close()
 

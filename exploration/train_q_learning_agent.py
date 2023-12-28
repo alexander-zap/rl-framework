@@ -1,13 +1,15 @@
 import logging
 import sys
 
+from clearml import Task
+
 from rl_framework.agent import CustomAgent, CustomAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
-    HuggingFaceConnector,
-    HuggingFaceDownloadConfig,
-    HuggingFaceUploadConfig,
+    ClearMLConnector,
+    ClearMLDownloadConfig,
+    ClearMLUploadConfig,
     evaluate_agent,
 )
 
@@ -23,7 +25,7 @@ root.addHandler(handler)
 # TODO: Use configs instead of manual setting of variables in scripts
 
 ENV_ID = "Taxi-v3"
-REMOTE_ENVIRONMENT = True
+REMOTE_ENVIRONMENT = False
 PORT = 56585
 
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
@@ -60,16 +62,13 @@ if __name__ == "__main__":
 
     seeds = None
 
-    connector = HuggingFaceConnector()
-    upload_connector_config = HuggingFaceUploadConfig(
-        repository_id=REPO_ID,
-        environment_name=ENV_ID,
-        file_name="algorithm.pkl",
-        model_architecture=MODEL_ARCHITECTURE,
-        commit_message=COMMIT_MESSAGE,
+    task = Task.init(project_name="synthetic-player")
+    connector = ClearMLConnector(task=task)
+    upload_connector_config = ClearMLUploadConfig(
+        file_name="agent.pkl",
         n_eval_episodes=50,
     )
-    download_connector_config = HuggingFaceDownloadConfig(repository_id=REPO_ID, file_name="algorithm.pkl")
+    download_connector_config = ClearMLDownloadConfig(task_id="11d8c9be82cf4e35ade2a34f4dc4e066", file_name="agent.pkl")
 
     # Create new agent
     agent = CustomAgent(
@@ -91,7 +90,9 @@ if __name__ == "__main__":
 
     else:
         # Train agent
-        agent.train(training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS)
+        agent.train(
+            training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS, logging_connector=connector
+        )
 
     # Evaluate the model
     mean_reward, std_reward = evaluate_agent(

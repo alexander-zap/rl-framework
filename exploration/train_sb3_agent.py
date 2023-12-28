@@ -1,13 +1,15 @@
 import logging
 import sys
 
+from clearml import Task
+
 from rl_framework.agent import StableBaselinesAgent, StableBaselinesAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
-    HuggingFaceConnector,
-    HuggingFaceDownloadConfig,
-    HuggingFaceUploadConfig,
+    ClearMLConnector,
+    ClearMLDownloadConfig,
+    ClearMLUploadConfig,
     evaluate_agent,
 )
 
@@ -22,12 +24,12 @@ root.addHandler(handler)
 
 # TODO: Use configs instead of manual setting of variables in scripts
 
-ENV_ID = "CarRacing-v2"
+ENV_ID = "Taxi-v3"
 REMOTE_ENVIRONMENT = False
 PORT = 56729
 
 # FIXME: This should be set by config and should be used for automatic setting of algorithm
-MODEL_ARCHITECTURE = "Remote-DQN"
+MODEL_ARCHITECTURE = "Test-PPO"
 PARALLEL_ENVIRONMENTS = 32
 
 DOWNLOAD_EXISTING_AGENT = False
@@ -58,16 +60,13 @@ if __name__ == "__main__":
 
     seeds = None
 
-    connector = HuggingFaceConnector()
-    upload_connector_config = HuggingFaceUploadConfig(
-        repository_id=REPO_ID,
-        environment_name=ENV_ID,
-        file_name="algorithm.zip",
-        model_architecture=MODEL_ARCHITECTURE,
-        commit_message=COMMIT_MESSAGE,
+    task = Task.init(project_name="synthetic-player")
+    connector = ClearMLConnector(task=task)
+    upload_connector_config = ClearMLUploadConfig(
+        file_name="agent.zip",
         n_eval_episodes=50,
     )
-    download_connector_config = HuggingFaceDownloadConfig(repository_id=REPO_ID, file_name="algorithm.zip")
+    download_connector_config = ClearMLDownloadConfig(task_id="f1f750b76fc84312a478c035e61fbc77", file_name="agent.zip")
 
     # Create new agent
     agent = StableBaselinesAgent(
@@ -91,7 +90,9 @@ if __name__ == "__main__":
 
     else:
         # Train agent
-        agent.train(training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS)
+        agent.train(
+            training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS, logging_connector=connector
+        )
 
     # Evaluate the model
     mean_reward, std_reward = evaluate_agent(
