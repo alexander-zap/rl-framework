@@ -16,8 +16,8 @@ handler.setFormatter(formatter)
 root.addHandler(handler)
 
 if __name__ == "__main__":
-    server, port = start_as_remote_environment(
-        url="localhost", local_environment=GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array")
+    server = start_as_remote_environment(
+        url="localhost", port=56789, local_environment=GymEnvironmentWrapper(ENV_ID, render_mode="rgb_array")
     )
 
     try:

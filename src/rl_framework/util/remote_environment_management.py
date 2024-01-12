@@ -16,7 +16,7 @@ from numpy.dtypes import Float32DType, Int64DType, UInt8DType
 from rl_framework.environment import Environment
 
 
-def start_as_remote_environment(local_environment: Environment, url: Text, port: int) -> Tuple[grpc.Server, int]:
+def start_as_remote_environment(local_environment: Environment, url: Text, port: int) -> grpc.Server:
     """
     Method with which every environment can be transformed to a remote one.
     Use the Remote Environment class
@@ -26,23 +26,23 @@ def start_as_remote_environment(local_environment: Environment, url: Text, port:
     Args:
         local_environment: Environment which should be ran remotely on a server.
         url: URL to the machine where the remote environment should be running on.
-        port: Wished port (on the remote machine URL) for communication with the remote environment.
+        port: Port to open (on the remote machine URL) for communication with the remote environment.
 
     Returns:
         server: Reference to the gRPC server (for later closing)
-        port: Confirmed port (on the remote machine URL) for communication with the remote environment.
 
     """
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
     servicer = RemoteEnvironmentService(environment=local_environment)
     dm_env_rpc_pb2_grpc.add_EnvironmentServicer_to_server(servicer, server)
 
-    port = server.add_secure_port(f"{url}:{port}", grpc.local_server_credentials())
+    assigned_port = server.add_secure_port(f"{url}:{port}", grpc.local_server_credentials())
+    assert assigned_port == port
     server.start()
 
-    logging.info(f"Remote environment running on {url}:{port}")
+    logging.info(f"Remote environment running on {url}:{assigned_port}")
 
-    return server, port
+    return server
 
 
 class RemoteEnvironmentService(dm_env_rpc_pb2_grpc.EnvironmentServicer):
