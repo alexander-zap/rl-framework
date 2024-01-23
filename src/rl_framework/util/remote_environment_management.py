@@ -20,7 +20,7 @@ def start_as_remote_environment(
     local_environment: Environment,
     url: Text,
     port: int,
-    server_credentials_paths: Optional[Tuple[Text, Text, Optional[Text]]],
+    server_credentials_paths: Optional[Tuple[Text, Text, Optional[Text]]] = None,
 ) -> grpc.Server:
     """
     Method with which every environment can be transformed to a remote one.

@@ -54,7 +54,7 @@ class RemoteEnvironment(Environment):
         self,
         url: Text,
         port: int,
-        client_credentials_paths: Optional[Tuple[Text, Optional[Text], Optional[Text]]],
+        client_credentials_paths: Optional[Tuple[Text, Optional[Text], Optional[Text]]] = None,
         *args,
         **kwargs,
     ):
