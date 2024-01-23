@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, SupportsFloat, Text, Tuple
 
+import grpc
 import numpy as np
 from dm_env import StepType, specs
 from dm_env_rpc.v1 import connection as dm_env_rpc_connection
@@ -49,9 +50,27 @@ class RemoteEnvironment(Environment):
     def render_mode(self, value):
         self._render_mode = value
 
-    def __init__(self, url: Text, port: int, *args, **kwargs):
+    def __init__(
+        self,
+        url: Text,
+        port: int,
+        client_credentials_paths: Optional[Tuple[Text, Optional[Text], Optional[Text]]],
+        *args,
+        **kwargs,
+    ):
         """
         Initialize the remote environment connection.
+
+        Requires credentials to connect to the secure server port in gRPC (needs to match the required server
+            authentication on the server hosting the remotely running environment application).
+
+        Args:
+            url: URL to the machine where the remotely running environment application is hosted on.
+            port: Open port on the remote machine (for communication with the remotely running environment application).
+            client_credentials_paths: Tuple of paths to TSL authentication files (optional; local connection of not provided)
+                - root_cert_path: Path to TSL root certificate
+                - client_cert_path: Path to TSL client certificate (optional, only for client authentication)
+                - client_private_key_path: Path to TLS client private key (optional, only for client authentication)
         """
 
         def convert_to_space(spec: specs.Array) -> Space:
@@ -89,7 +108,32 @@ class RemoteEnvironment(Environment):
                     )
                     raise ValueError
 
-        self.connection = dm_env_rpc_connection.create_secure_channel_and_connect(f"{url}:{port}")
+        if client_credentials_paths:
+            root_cert_path, client_cert_path, client_private_key_path = client_credentials_paths
+            root_cert = open(root_cert_path, "rb").read()
+            client_authentication = True if client_private_key_path and client_cert_path else False
+
+            client_private_key = open(client_private_key_path, "rb").read() if client_authentication else None
+            client_cert_chain = open(client_cert_path, "rb").read() if client_authentication else None
+
+            client_credentials = grpc.ssl_channel_credentials(
+                root_certificates=root_cert,
+                private_key=client_private_key,
+                certificate_chain=client_cert_chain
+            )
+            logging.info(
+                f"Connecting securely to port on {url}:{port}. "
+                f"Client authentication is {'ATTEMPTED' if client_authentication else 'OMITTED'}."
+            )
+        else:
+            client_credentials = grpc.local_channel_credentials()
+            logging.info(
+                f"Connecting securely to port on {url}:{port}. "
+                f"SSL credentials were not provided, therefore can only connect to local servers."
+            )
+
+        self.connection = dm_env_rpc_connection.create_secure_channel_and_connect(f"{url}:{port}", client_credentials)
+
         self.remote_environment, self.world_name = dm_env_adaptor.create_and_join_world(
             self.connection, create_world_settings={}, join_world_settings={}
         )

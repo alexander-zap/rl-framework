@@ -1,6 +1,6 @@
 import logging
 from concurrent import futures
-from typing import Text, Tuple
+from typing import Optional, Text, Tuple
 
 import grpc
 from dm_env_rpc.v1 import (
@@ -16,17 +16,28 @@ from numpy.dtypes import Float32DType, Int64DType, UInt8DType
 from rl_framework.environment import Environment
 
 
-def start_as_remote_environment(local_environment: Environment, url: Text, port: int) -> grpc.Server:
+def start_as_remote_environment(
+    local_environment: Environment,
+    url: Text,
+    port: int,
+    server_credentials_paths: Optional[Tuple[Text, Text, Optional[Text]]],
+) -> grpc.Server:
     """
     Method with which every environment can be transformed to a remote one.
-    Use the Remote Environment class
-
     Starts the Catch gRPC server and passes the locally instantiated environment.
+    Requires credentials to open a secure server port in gRPC. Needs to match the client authentication.
 
     Args:
         local_environment: Environment which should be ran remotely on a server.
         url: URL to the machine where the remote environment should be running on.
         port: Port to open (on the remote machine URL) for communication with the remote environment.
+        server_credentials_paths: Tuple of paths to TSL authentication files (optional; local connection of not provided)
+            - server_cert_path: Path to TSL server certificate
+            - server_private_key_path: Path to TLS server private key
+            - root_cert_path: Path to TSL root certificate (optional, only for client authentication)
+
+    NOTE: Use the RemoteEnvironment class to connect to a remotely started environment
+        and provide a gym.Env interface to a learning agent.
 
     Returns:
         server: Reference to the gRPC server (for later closing)
@@ -36,7 +47,32 @@ def start_as_remote_environment(local_environment: Environment, url: Text, port:
     servicer = RemoteEnvironmentService(environment=local_environment)
     dm_env_rpc_pb2_grpc.add_EnvironmentServicer_to_server(servicer, server)
 
-    assigned_port = server.add_secure_port(f"{url}:{port}", grpc.local_server_credentials())
+    if server_credentials_paths:
+        server_cert_path, server_private_key_path, root_cert_path = server_credentials_paths
+        assert server_cert_path and server_private_key_path
+
+        server_cert_chain = open(server_cert_path, "rb").read()
+        server_private_key = open(server_private_key_path, "rb").read()
+        root_cert = open(root_cert_path, "rb").read() if root_cert_path else None
+
+        client_authentication_required = True if root_cert is not None else False
+        server_credentials = grpc.ssl_server_credentials(
+            private_key_certificate_chain_pairs=[(server_private_key, server_cert_chain)],
+            root_certificates=root_cert,
+            require_client_auth=client_authentication_required,
+        )
+        logging.info(
+            f"Opening secure port on {url}:{port}. "
+            f"Client authentication {'REQUIRED' if client_authentication_required else 'OPTIONAL'}."
+        )
+    else:
+        server_credentials = grpc.local_server_credentials()
+        logging.info(
+            f"Opening secure port on {url}:{port}. "
+            f"SSL credentials were not provided, therefore connection only accepts local connections."
+        )
+
+    assigned_port = server.add_secure_port(f"{url}:{port}", server_credentials)
     assert assigned_port == port
     server.start()
 
