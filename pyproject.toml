@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rl-framework"
-version = "0.3.0"
+version = "0.4.0"
 description = "An easy-to-read Reinforcement Learning (RL) framework. Provides standardized interfaces and implementations to various Reinforcement Learning methods and environments. Also this is the main place to start your journey with Reinforcement Learning and learn from tutorials and examples."
 authors = ["Alexander Zap"]
 license = "Proprietary"
