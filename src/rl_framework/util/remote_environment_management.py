@@ -31,7 +31,8 @@ def start_as_remote_environment(
         local_environment: Environment which should be ran remotely on a server.
         url: URL to the machine where the remote environment should be running on.
         port: Port to open (on the remote machine URL) for communication with the remote environment.
-        server_credentials_paths: Tuple of paths to TSL authentication files (optional; local connection of not provided)
+        server_credentials_paths (optional; local connection if not provided):
+        Tuple of paths to TSL authentication files
             - server_cert_path: Path to TSL server certificate
             - server_private_key_path: Path to TLS server private key
             - root_cert_path: Path to TSL root certificate (optional, only for client authentication)

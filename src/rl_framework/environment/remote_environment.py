@@ -67,7 +67,8 @@ class RemoteEnvironment(Environment):
         Args:
             url: URL to the machine where the remotely running environment application is hosted on.
             port: Open port on the remote machine (for communication with the remotely running environment application).
-            client_credentials_paths: Tuple of paths to TSL authentication files (optional; local connection of not provided)
+            client_credentials_paths (optional; local connection if not provided):
+            Tuple of paths to TSL authentication files
                 - root_cert_path: Path to TSL root certificate
                 - client_cert_path: Path to TSL client certificate (optional, only for client authentication)
                 - client_private_key_path: Path to TLS client private key (optional, only for client authentication)
@@ -117,9 +118,7 @@ class RemoteEnvironment(Environment):
             client_cert_chain = open(client_cert_path, "rb").read() if client_authentication else None
 
             client_credentials = grpc.ssl_channel_credentials(
-                root_certificates=root_cert,
-                private_key=client_private_key,
-                certificate_chain=client_cert_chain
+                root_certificates=root_cert, private_key=client_private_key, certificate_chain=client_cert_chain
             )
             logging.info(
                 f"Connecting securely to port on {url}:{port}. "
