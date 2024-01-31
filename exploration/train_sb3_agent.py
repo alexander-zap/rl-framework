@@ -2,10 +2,10 @@ import logging
 import sys
 
 from clearml import Task
+from remote_gym import RemoteEnvironment
 
 from rl_framework.agent import StableBaselinesAgent, StableBaselinesAlgorithm
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.environment.remote_environment import RemoteEnvironment
 from rl_framework.util import (
     ClearMLConnector,
     ClearMLDownloadConfig,

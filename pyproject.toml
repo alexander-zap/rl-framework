@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rl-framework"
-version = "0.4.0"
+version = "0.5.0"
 description = "An easy-to-read Reinforcement Learning (RL) framework. Provides standardized interfaces and implementations to various Reinforcement Learning methods and environments. Also this is the main place to start your journey with Reinforcement Learning and learn from tutorials and examples."
 authors = ["Alexander Zap"]
 license = "Proprietary"
@@ -11,10 +11,9 @@ include = ["src/rl_framework/res/*"]
 
 [tool.poetry.dependencies]
 python = ">=3.10.1,<=3.10.8"
-setuptools = "^69.0"
 numpy = "^1.26.3"
 protobuf = "~3.20"
-gymnasium = {extras = ["box2d"], version = "^0.29.1"}
+gymnasium = {extras = ["box2d"], version = "^0.28.1"}
 stable-baselines3 = {extras = ["extra"], version = "^2.2"}
 tqdm = "^4.66"
 huggingface_hub = "^0.19"
@@ -22,6 +21,7 @@ imageio = "^2.33.0"
 moviepy = "^1.0.3"
 clearml = "^1.14.1"
 dm-env-rpc = "^1.1.6"
+remote-gym = { git = "https://github.com/alexander-zap/remote-gym" }
 # mlagents_envs = { path = "../ml-agents/ml-agents-envs/", develop = true}
 
 [tool.poetry.group.dev.dependencies]

@@ -1,8 +1,9 @@
 import logging
 import sys
 
+from remote_gym import start_as_remote_environment
+
 from rl_framework.environment.gym_environment import GymEnvironmentWrapper
-from rl_framework.util.remote_environment_management import start_as_remote_environment
 
 ENV_ID = "CarRacing-v2"
 
