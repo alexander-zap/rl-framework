@@ -64,7 +64,9 @@ class ClearMLConnector(Connector):
             title=value_name, series=value_name, value=value_scalar, iteration=timestep
         )
 
-    def upload(self, connector_config: ClearMLUploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
+    def upload(
+        self, connector_config: ClearMLUploadConfig, agent, evaluation_environment, generate_video, *args, **kwargs
+    ) -> None:
         """Evaluate the agent on the evaluation environment and generate a video.
          Afterward, upload the artifacts and the agent itself to a ClearML task.
 
@@ -73,6 +75,7 @@ class ClearMLConnector(Connector):
                 See above for the documented dataclass attributes.
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
+            generate_video (bool): Flag whether a video should be generated and uploaded to the connector.
         """
         file_name = connector_config.file_name
         n_eval_episodes = connector_config.n_eval_episodes
@@ -113,15 +116,20 @@ class ClearMLConnector(Connector):
         self.task.upload_artifact(name="system_info", artifact_object=system_info)
 
         # Step 4: Record a video and log local video file
-        temp_path = tempfile.mkdtemp()
-        logging.debug(f"Recording video to {temp_path} and uploading as debug sample ...")
-        video_path = Path(temp_path) / "replay.mp4"
-        record_video(
-            agent=agent, evaluation_environment=evaluation_environment, file_path=video_path, fps=1, video_length=1000
-        )
-        self.task.get_logger().report_media(
-            "video ", "agent-in-environment recording", iteration=1, local_path=video_path
-        )
+        if generate_video:
+            temp_path = tempfile.mkdtemp()
+            logging.debug(f"Recording video to {temp_path} and uploading as debug sample ...")
+            video_path = Path(temp_path) / "replay.mp4"
+            record_video(
+                agent=agent,
+                evaluation_environment=evaluation_environment,
+                file_path=video_path,
+                fps=1,
+                video_length=1000,
+            )
+            self.task.get_logger().report_media(
+                "video ", "agent-in-environment recording", iteration=1, local_path=video_path
+            )
 
         # TODO: Save README.md
 

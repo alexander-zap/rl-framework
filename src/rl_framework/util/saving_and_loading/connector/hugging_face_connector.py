@@ -46,7 +46,9 @@ class HuggingFaceDownloadConfig(DownloadConfig):
 
 
 class HuggingFaceConnector(Connector):
-    def upload(self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, *args, **kwargs):
+    def upload(
+        self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, generate_video, *args, **kwargs
+    ):
         """
         Evaluate, generate a video and upload a model to Hugging Face Hub.
         This method does the complete pipeline:
@@ -60,6 +62,7 @@ class HuggingFaceConnector(Connector):
                 See above for the documented dataclass attributes.
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
+            generate_video (bool): Flag whether a video should be generated and uploaded to the connector.
 
         NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
             following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
@@ -206,14 +209,18 @@ Further examples can be found in the [exploration section of the rl-framework re
         metadata_save(readme_path, metadata)
 
         # Step 6: Record a video
-        video_path = repo_local_path / "replay.mp4"
-        record_video(
-            agent=agent, evaluation_environment=evaluation_environment, file_path=video_path, fps=1, video_length=1000
-        )
-
-        logging.info(f"Pushing repo {repository_id} to the Hugging Face Hub")
+        if generate_video:
+            video_path = repo_local_path / "replay.mp4"
+            record_video(
+                agent=agent,
+                evaluation_environment=evaluation_environment,
+                file_path=video_path,
+                fps=1,
+                video_length=1000,
+            )
 
         # Step 7. Push everything to the Hub
+        logging.info(f"Pushing repo {repository_id} to the Hugging Face Hub")
         api.upload_folder(
             repo_id=repository_id,
             folder_path=repo_local_path,

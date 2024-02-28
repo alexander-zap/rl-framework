@@ -83,7 +83,7 @@ evaluate_agent(agent=agent, evaluation_environment=environment)
 ### Uploading and downloading models from the HuggingFace Hub
 
 Once you trained the agent, you can upload the agent model to the HuggingFace Hub in order to share and compare your agent to others. You can also downloaded yours or other agents from the same HuggingFace Hub and use them for solving environments or re-training.
-The methods which allow for this functionality are `upload_to_huggingface_hub` and `download_from_huggingface_hub`, which can be found in the [util saving and loading functions](src/rl_framework/util/saving_and_loading/saving_and_loading.py).
+The object which allows for this functionality is `HuggingFaceConnector`, which can be found in the [connection collection package](src/rl_framework/util/saving_and_loading/connector).
 
 ### Example
 

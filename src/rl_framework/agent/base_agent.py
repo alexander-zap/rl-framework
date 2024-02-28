@@ -4,13 +4,7 @@ from typing import Dict, List, Optional
 
 from rl_framework.agent.custom_algorithms import Algorithm
 from rl_framework.environment import Environment
-from rl_framework.util.saving_and_loading import (
-    Connector,
-    DownloadConfig,
-    UploadConfig,
-    download,
-    upload,
-)
+from rl_framework.util.saving_and_loading import Connector, DownloadConfig, UploadConfig
 
 
 class Agent(ABC):
@@ -44,19 +38,23 @@ class Agent(ABC):
         connector: Connector,
         connector_config: UploadConfig,
         evaluation_environment: Environment,
+        generate_video: bool = False,
     ) -> None:
-        """Evaluate, generate a video and upload the agent to the connector.
+        """
+        Evaluate and upload the decision-making agent (and its .algorithm attribute) to the connector.
+            Additional option: Generate a video of the agent interacting with the environment.
 
         Args:
             connector: Connector for uploading.
             connector_config: Configuration data for connector.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
+            generate_video: Flag whether a video should be generated and uploaded to the connector (default: False).
         """
-        upload(
-            connector=connector,
-            connector_config=connector_config,
+        connector.upload(
             agent=self,
             evaluation_environment=evaluation_environment,
+            connector_config=connector_config,
+            generate_video=generate_video,
         )
 
     def download(
@@ -65,17 +63,18 @@ class Agent(ABC):
         connector_config: DownloadConfig,
         algorithm_parameters: Optional[Dict] = None,
     ):
-        """Download a reinforcement learning model from the connector and update the agent in-place.
+        """
+        Download a previously saved decision-making agent from the connector and replace the `self` agent instance
+            in-place with the newly downloaded saved-agent.
+
+        NOTE: Agent and Algorithm class need to be the same as the saved agent.
 
         Args:
             connector: Connector for downloading.
             connector_config: Configuration data for connector.
-            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded algorithm.
+            algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded agent.
         """
 
-        download(
-            connector=connector,
-            connector_config=connector_config,
-            agent=self,
-            algorithm_parameters=algorithm_parameters,
-        )
+        # Get the model from the Hub, download and cache the model on your local disk
+        agent_file_path = connector.download(connector_config)
+        self.load_from_file(agent_file_path, algorithm_parameters)
