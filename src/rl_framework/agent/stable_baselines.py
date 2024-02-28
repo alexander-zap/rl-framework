@@ -2,9 +2,10 @@ import tempfile
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
-from stable_baselines3 import A2C, DDPG, DQN, HER, PPO, SAC, TD3
+from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
+from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.env_util import make_vec_env
 
@@ -17,7 +18,6 @@ class StableBaselinesAlgorithm(Enum):
     A2C = A2C
     DDPG = DDPG
     DQN = DQN
-    HER = HER
     PPO = PPO
     SAC = SAC
     TD3 = TD3
@@ -25,11 +25,11 @@ class StableBaselinesAlgorithm(Enum):
 
 class StableBaselinesAgent(Agent):
     @property
-    def algorithm(self):
+    def algorithm(self) -> Optional[BaseAlgorithm]:
         return self._algorithm
 
     @algorithm.setter
-    def algorithm(self, value):
+    def algorithm(self, value: Optional[BaseAlgorithm]):
         self._algorithm = value
 
     def __init__(
@@ -49,14 +49,12 @@ class StableBaselinesAgent(Agent):
                 See individual docs (e.g., https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
                 for algorithm-specific params.
         """
-
         self.algorithm_class = algorithm.value
 
-        if algorithm_parameters is None:
-            algorithm_parameters = {"policy": "MlpPolicy"}
+        algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
 
-        self.algorithm = None
-        self._algorithm_builder = partial(self.algorithm_class, **algorithm_parameters)
+        self.algorithm: Optional[BaseAlgorithm] = None
+        self.algorithm_builder: Callable[..., BaseAlgorithm] = partial(self.algorithm_class, **algorithm_parameters)
 
     def train(
         self,
@@ -75,7 +73,7 @@ class StableBaselinesAgent(Agent):
         after the agent has been trained.
 
         Args:
-            training_environments (List[Environment): Environment on which the agent should be trained on.
+            training_environments (List[Environment]): Environment on which the agent should be trained on.
                 If n_environments is set above 1, multiple environments enables parallel training of an agent.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
             logging_connector (Connector): Connector for logging metrics on training time.
@@ -117,8 +115,7 @@ class StableBaselinesAgent(Agent):
             n_envs=len(training_environments),
         )
 
-        with tempfile.TemporaryDirectory() as temp_path:
-            self.algorithm = self._algorithm_builder(env=training_env, tensorboard_log=temp_path)
+        self.algorithm = self.algorithm_builder(env=training_env)
 
         self.algorithm.learn(total_timesteps=total_timesteps, callback=LoggingCallback())
 
@@ -151,16 +148,40 @@ class StableBaselinesAgent(Agent):
         """
         self.algorithm.save(file_path)
 
-    def load_from_file(self, file_path: Path, algorithm_parameters: Dict, *args, **kwargs) -> None:
+    def load_from_file(self, file_path: Path, algorithm_parameters: Dict = None, *args, **kwargs) -> None:
         """Load the agent in-place from an agent-save folder.
 
         Args:
             file_path (Path): The model filename (file ending with .zip).
             algorithm_parameters: Parameters to be set for the loaded algorithm.
         """
-        algorithm = self.algorithm_class.load(
-            file_path,
-            custom_objects=algorithm_parameters,
-            print_system_info=True,
+        algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
+        self.algorithm_builder = partial(
+            self.algorithm_class.load, path=file_path, custom_objects=algorithm_parameters, print_system_info=True
         )
-        self.algorithm = algorithm
+
+    @staticmethod
+    def _add_required_default_parameters(algorithm_parameters: Optional[Dict]):
+        """
+        Add missing required parameters to `algorithm_parameters`.
+        Required parameters currently are:
+            - "policy": needs to be set for every BaseRLAlgorithm. Set to "MlpPolicy" if not provided.
+            - "tensorboard_log": needs to be set for logging callbacks. Set to newly created temp dir if not provided.
+
+        Args:
+            algorithm_parameters (Optional[Dict]): Parameters passed by user (in .__init__ or .load_from_file).
+
+        Returns:
+            algorithm_parameters (Dict): Parameter dictionary with filled up default parameter entries
+
+        """
+        if algorithm_parameters is None:
+            algorithm_parameters = {"policy": "MlpPolicy"}
+
+        # Existing tensorboard log paths can be used (e.g., for continuing training of downloaded agents).
+        # If not provided, tensorboard will be logged to newly created temp dir.
+        if "tensorboard_log" not in algorithm_parameters:
+            tensorboard_log_path = tempfile.mkdtemp()
+            algorithm_parameters.update({"tensorboard_log": tensorboard_log_path})
+
+        return algorithm_parameters
