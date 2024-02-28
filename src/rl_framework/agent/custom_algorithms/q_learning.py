@@ -104,7 +104,21 @@ class QLearning(Algorithm):
         """
 
         # TODO: Exploration-exploitation strategy is currently hard-coded as epsilon-greedy.
-        #   Pass exploration-exploitation strategy from outside
+        #   Instead: Pass exploration-exploitation strategy from outside.
+        #   See KerasRL for example:
+        #         policy = LinearAnnealedPolicy(
+        #             EpsGreedyQPolicy(),
+        #             attr="eps",
+        #             value_max=1.0,
+        #             value_min=0.1,
+        #             value_test=0.01,
+        #             nb_steps=1000000
+        #         )
+        #         agent = DQNAgent(
+        #             model=model,
+        #             policy=policy,
+        #             ...
+        #         )
         def choose_action_according_to_exploration_exploitation_strategy(obs):
             greedy_action = self.choose_action(obs)
             # Choose random action with probability epsilon
@@ -144,6 +158,8 @@ class QLearning(Algorithm):
                 done = terminated or truncated
                 action = choose_action_according_to_exploration_exploitation_strategy(observation)
                 episode_reward += reward
+                # TODO: Replay sampling strategy is currently hard-coded as on-line.
+                #   Instead: Pass replay sampling strategy from outside (as Memory-class).
                 self._update_q_table(prev_observation, prev_action, observation, reward)
 
                 prev_observation = observation
