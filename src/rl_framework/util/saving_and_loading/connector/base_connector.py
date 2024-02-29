@@ -51,9 +51,9 @@ class Connector(ABC):
         self.logging_history[value_name].append((timestep, value_scalar))
 
     @abstractmethod
-    def upload(self, config: UploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
+    def upload(self, connector_config: UploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def download(self, config: DownloadConfig, *args, **kwargs) -> Path:
+    def download(self, connector_config: DownloadConfig, *args, **kwargs) -> Path:
         raise NotImplementedError
