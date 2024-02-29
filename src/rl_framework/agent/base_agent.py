@@ -51,7 +51,7 @@ class Agent(ABC):
         connector.upload(
             agent=self,
             evaluation_environment=evaluation_environment,
-            config=connector_config,
+            connector_config=connector_config,
         )
 
     def download(
