@@ -38,7 +38,7 @@ class Agent(ABC):
         connector: Connector,
         connector_config: UploadConfig,
         evaluation_environment: Environment,
-        generate_video: bool = False,
+        video_length: int = 0,
     ) -> None:
         """
         Evaluate and upload the decision-making agent (and its .algorithm attribute) to the connector.
@@ -48,13 +48,14 @@ class Agent(ABC):
             connector: Connector for uploading.
             connector_config: Configuration data for connector.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
-            generate_video: Flag whether a video should be generated and uploaded to the connector (default: False).
+            video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
+                No video is uploaded if length is 0 or negative. Set to 0 by default.
         """
         connector.upload(
             agent=self,
             evaluation_environment=evaluation_environment,
-            connector_config=connector_config,
-            generate_video=generate_video,
+            config=connector_config,
+            video_length=video_length,
         )
 
     def download(

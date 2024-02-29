@@ -47,7 +47,7 @@ class HuggingFaceDownloadConfig(DownloadConfig):
 
 class HuggingFaceConnector(Connector):
     def upload(
-        self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, generate_video, *args, **kwargs
+        self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, video_length, *args, **kwargs
     ):
         """
         Evaluate, generate a video and upload a model to Hugging Face Hub.
@@ -62,7 +62,8 @@ class HuggingFaceConnector(Connector):
                 See above for the documented dataclass attributes.
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            generate_video (bool): Flag whether a video should be generated and uploaded to the connector.
+            video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
+                No video is uploaded if length is 0 or negative.
 
         NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
             following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
@@ -209,14 +210,14 @@ Further examples can be found in the [exploration section of the rl-framework re
         metadata_save(readme_path, metadata)
 
         # Step 6: Record a video
-        if generate_video:
+        if video_length > 0:
             video_path = repo_local_path / "replay.mp4"
             record_video(
                 agent=agent,
                 evaluation_environment=evaluation_environment,
                 file_path=video_path,
                 fps=1,
-                video_length=1000,
+                video_length=video_length,
             )
 
         # Step 7. Push everything to the Hub
