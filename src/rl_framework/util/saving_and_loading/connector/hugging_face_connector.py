@@ -24,6 +24,8 @@ class HuggingFaceUploadConfig(UploadConfig):
     model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
     commit_message (Text): Commit message for the HuggingFace repository commit.
     n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
+    video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
+        No video is uploaded if length is 0 or negative.
     """
 
     repository_id: Text
@@ -32,6 +34,7 @@ class HuggingFaceUploadConfig(UploadConfig):
     model_architecture: Text
     commit_message: Text
     n_eval_episodes: int
+    video_length: int
 
 
 @dataclass
@@ -46,9 +49,7 @@ class HuggingFaceDownloadConfig(DownloadConfig):
 
 
 class HuggingFaceConnector(Connector):
-    def upload(
-        self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, video_length, *args, **kwargs
-    ):
+    def upload(self, connector_config: HuggingFaceUploadConfig, agent, evaluation_environment, *args, **kwargs):
         """
         Evaluate, generate a video and upload a model to Hugging Face Hub.
         This method does the complete pipeline:
@@ -62,8 +63,6 @@ class HuggingFaceConnector(Connector):
                 See above for the documented dataclass attributes.
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
-                No video is uploaded if length is 0 or negative.
 
         NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
             following code: `cd <path_to_repo> && git add . && git commit -m "Add message" && git pull`
@@ -76,6 +75,7 @@ class HuggingFaceConnector(Connector):
         model_architecture = connector_config.model_architecture
         commit_message = connector_config.commit_message
         n_eval_episodes = connector_config.n_eval_episodes
+        video_length = connector_config.video_length
 
         assert environment_name and file_name and model_architecture and commit_message and n_eval_episodes
 

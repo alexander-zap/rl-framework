@@ -20,10 +20,13 @@ class ClearMLUploadConfig(UploadConfig):
     """
     file_name (str): File name of agent to be saved to
     n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
+    video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
+        No video is uploaded if length is 0 or negative.
     """
 
     file_name: str
     n_eval_episodes: int
+    video_length: int
 
 
 @dataclass
@@ -64,9 +67,7 @@ class ClearMLConnector(Connector):
             title=value_name, series=value_name, value=value_scalar, iteration=timestep
         )
 
-    def upload(
-        self, connector_config: ClearMLUploadConfig, agent, evaluation_environment, video_length, *args, **kwargs
-    ) -> None:
+    def upload(self, connector_config: ClearMLUploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
         """Evaluate the agent on the evaluation environment and generate a video.
          Afterward, upload the artifacts and the agent itself to a ClearML task.
 
@@ -75,12 +76,10 @@ class ClearMLConnector(Connector):
                 See above for the documented dataclass attributes.
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
-                No video is uploaded if length is 0 or negative.
-
         """
         file_name = connector_config.file_name
         n_eval_episodes = connector_config.n_eval_episodes
+        video_length = connector_config.video_length
 
         assert file_name, n_eval_episodes
 
