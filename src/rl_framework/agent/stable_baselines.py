@@ -50,11 +50,16 @@ class StableBaselinesAgent(Agent):
         """
         self.algorithm_class: Type[BaseAlgorithm] = algorithm.value
 
-        algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
+        self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
 
-        # NOTE: SB3 requires us to pass an environment to initialize the algorithm. We use "Taxi-v3" as dummy.
-        #  It is re-set in .train (or in .load_from_file), when information about the goal environment is available.
-        self.algorithm: BaseAlgorithm = self.algorithm_class(env=make_vec_env("Taxi-v3"), **algorithm_parameters)
+        additional_parameters = (
+            {"_init_setup_model": False} if (getattr(self.algorithm_class, "_setup_model", None)) else {}
+        )
+
+        self.algorithm: BaseAlgorithm = self.algorithm_class(
+            env=None, **self.algorithm_parameters, **additional_parameters
+        )
+        self.algorithm_needs_initialization = True
 
     def train(
         self,
@@ -114,7 +119,11 @@ class StableBaselinesAgent(Agent):
             n_envs=len(training_environments),
         )
 
-        self.algorithm.set_env(env=training_env)
+        if self.algorithm_needs_initialization:
+            self.algorithm = self.algorithm_class(env=training_env, **self.algorithm_parameters)
+            self.algorithm_needs_initialization = False
+        else:
+            self.algorithm.set_env(env=training_env)
 
         self.algorithm.learn(total_timesteps=total_timesteps, callback=LoggingCallback())
 
@@ -158,6 +167,7 @@ class StableBaselinesAgent(Agent):
         self.algorithm = self.algorithm_class.load(
             path=file_path, custom_objects=algorithm_parameters, print_system_info=True
         )
+        self.algorithm_needs_initialization = False
 
     @staticmethod
     def _add_required_default_parameters(algorithm_parameters: Optional[Dict]):
