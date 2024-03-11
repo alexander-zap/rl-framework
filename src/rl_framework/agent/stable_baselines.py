@@ -123,7 +123,12 @@ class StableBaselinesAgent(Agent):
             self.algorithm = self.algorithm_class(env=training_env, **self.algorithm_parameters)
             self.algorithm_needs_initialization = False
         else:
-            self.algorithm.set_env(env=training_env)
+            with tempfile.TemporaryDirectory("w") as tmp_dir:
+                tmp_path = Path(tmp_dir) / "tmp_model.zip"
+                self.save_to_file(tmp_path)
+                self.algorithm = self.algorithm_class.load(
+                    path=tmp_path, env=training_env, custom_objects=self.algorithm_parameters
+                )
 
         self.algorithm.learn(total_timesteps=total_timesteps, callback=LoggingCallback())
 
@@ -163,10 +168,9 @@ class StableBaselinesAgent(Agent):
             file_path (Path): The model filename (file ending with .zip).
             algorithm_parameters: Parameters to be set for the loaded algorithm.
         """
-        algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
-        self.algorithm = self.algorithm_class.load(
-            path=file_path, custom_objects=algorithm_parameters, print_system_info=True
-        )
+        if algorithm_parameters:
+            self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
+        self.algorithm = self.algorithm_class.load(path=file_path, env=None, custom_objects=self.algorithm_parameters)
         self.algorithm_needs_initialization = False
 
     @staticmethod
