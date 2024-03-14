@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from rl_framework.agent.custom_algorithms import Algorithm
 from rl_framework.environment import Environment
-from rl_framework.util.saving_and_loading import Connector, DownloadConfig, UploadConfig
+from rl_framework.util.saving_and_loading import Connector
 
 
 class Agent(ABC):
@@ -18,7 +18,9 @@ class Agent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train(self, training_environments: List[Environment], total_timesteps: int, *args, **kwargs):
+    def train(
+        self, training_environments: List[Environment], total_timesteps: int, connector: Connector, *args, **kwargs
+    ):
         raise NotImplementedError
 
     @abstractmethod
@@ -36,7 +38,6 @@ class Agent(ABC):
     def upload(
         self,
         connector: Connector,
-        connector_config: UploadConfig,
         evaluation_environment: Environment,
     ) -> None:
         """
@@ -45,19 +46,16 @@ class Agent(ABC):
 
         Args:
             connector: Connector for uploading.
-            connector_config: Configuration data for connector.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
         """
         connector.upload(
             agent=self,
             evaluation_environment=evaluation_environment,
-            connector_config=connector_config,
         )
 
     def download(
         self,
         connector: Connector,
-        connector_config: DownloadConfig,
         algorithm_parameters: Optional[Dict] = None,
     ):
         """
@@ -68,10 +66,9 @@ class Agent(ABC):
 
         Args:
             connector: Connector for downloading.
-            connector_config: Configuration data for connector.
             algorithm_parameters (Optional[Dict]): Parameters to be set for the downloaded agent.
         """
 
         # Get the model from the Hub, download and cache the model on your local disk
-        agent_file_path = connector.download(connector_config)
+        agent_file_path = connector.download()
         self.load_from_file(agent_file_path, algorithm_parameters)

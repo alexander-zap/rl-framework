@@ -48,7 +48,7 @@ class CustomAgent(Agent):
         self,
         training_environments: List[Environment],
         total_timesteps: int,
-        logging_connector: Optional[Connector] = None,
+        connector: Optional[Connector] = None,
         *args,
         **kwargs,
     ):
@@ -61,14 +61,15 @@ class CustomAgent(Agent):
             training_environments (List[Environment): Environment on which the agent should be trained on.
                 If n_environments is set above 1, multiple environments enables parallel training of an agent.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
-            logging_connector (Connector): Connector for logging metrics on training time.
-                Logging is executed by calling the connector.log method. Calls need to be declared manually in the code.
+            connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
+                on training time. Logging is executed by calling the connector.log method.
+                Calls need to be declared manually in the code.
         """
 
         self.algorithm.train(
             training_environments=training_environments,
             total_timesteps=total_timesteps,
-            logging_connector=logging_connector,
+            connector=connector,
             *args,
             **kwargs,
         )

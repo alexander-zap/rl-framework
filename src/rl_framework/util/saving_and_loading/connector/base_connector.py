@@ -18,7 +18,7 @@ class DownloadConfig(ABC):
 
 
 class Connector(ABC):
-    def __init__(self):
+    def __init__(self, upload_config: UploadConfig, download_config: DownloadConfig):
         """Initialize connector for uploading or downloading agents from the HuggingFace Hub.
 
         All attributes which are relevant for uploading or downloading are set in the config object.
@@ -28,6 +28,11 @@ class Connector(ABC):
         For repeated use of the same connector instance, change the attributes of the config object which is passed
         to the upload/download method.
 
+        Args:
+            upload_config: Connector configuration data for uploading a model to the connector.
+            download_config: Connector configuration data for downloading a model from the connector.
+        NOTE: See individual connector package for the documented config dataclass attributes.
+
         self attributes:
             logging_history: Dictionary mapping each logged value name to a list of logged values, e.g.:
             {
@@ -36,6 +41,8 @@ class Connector(ABC):
             }
             Elements of each list are tuples of timestep-value-points.
         """
+        self.upload_config = upload_config
+        self.download_config = download_config
         self.logging_history: Dict[Text, List[Tuple]] = defaultdict(list)
 
     def log_value(self, timestep: int, value_scalar: SupportsFloat, value_name: Text) -> None:
@@ -51,9 +58,9 @@ class Connector(ABC):
         self.logging_history[value_name].append((timestep, value_scalar))
 
     @abstractmethod
-    def upload(self, connector_config: UploadConfig, agent, evaluation_environment, *args, **kwargs) -> None:
+    def upload(self, agent, evaluation_environment, checkpoint_id=None, *args, **kwargs) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def download(self, connector_config: DownloadConfig, *args, **kwargs) -> Path:
+    def download(self, *args, **kwargs) -> Path:
         raise NotImplementedError

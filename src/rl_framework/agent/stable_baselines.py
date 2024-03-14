@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Type
 import gym
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.env_util import make_vec_env
 
 from rl_framework.agent import Agent
@@ -65,7 +65,7 @@ class StableBaselinesAgent(Agent):
         self,
         training_environments: List[gym.Env],
         total_timesteps: int = 100000,
-        logging_connector: Optional[Connector] = None,
+        connector: Optional[Connector] = None,
         *args,
         **kwargs,
     ):
@@ -80,36 +80,65 @@ class StableBaselinesAgent(Agent):
         Args:
             training_environments (List[gym.Env]): List of environments on which the agent should be trained on.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
-            logging_connector (Connector): Connector for logging metrics on training time.
-                Logging is executed by calling the connector.log method. Calls need to be declared manually in the code.
+            connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
+                on training time. Calls need to be declared manually in the code.
         """
 
         class LoggingCallback(BaseCallback):
             """
-            A custom callback that derives from ``BaseCallback``.
-
-            :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
+            A custom callback that logs episode rewards after every done episode.
             """
 
             def __init__(self, verbose=0):
+                """
+                Args:
+                    verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
+                """
                 super().__init__(verbose)
                 self.episode_reward = 0
 
             def _on_step(self) -> bool:
                 """
                 This method will be called by the model after each call to `env.step()`.
-
-                For child callback (of an `EventCallback`), this will be called
-                when the event is triggered.
-
-                :return: If the callback returns False, training is aborted early.
+                If the callback returns False, training is aborted early.
                 """
-                # Only calculate for first environment (at index 0)
+                # FIXME: Currently only calculates for first environment (at index 0)
                 self.episode_reward += self.locals["rewards"][0]
                 done = self.locals["dones"][0]
                 if done:
-                    logging_connector.log_value(self.num_timesteps, self.episode_reward, "Episode reward")
+                    connector.log_value(self.num_timesteps, self.episode_reward, "Episode reward")
                     self.episode_reward = 0
+
+                return True
+
+        class SavingCallback(BaseCallback):
+            """
+            A custom callback which uploads the agent to the connector after every `checkpoint_frequency` steps.
+            """
+
+            def __init__(self, agent, checkpoint_frequency=50000, verbose=0):
+                """
+                Args:
+                    checkpoint_frequency: After how many steps a checkpoint should be saved to the connector.
+                    verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
+                """
+                super().__init__(verbose)
+                self.agent = agent
+                self.checkpoint_frequency = checkpoint_frequency
+                self.next_upload = self.checkpoint_frequency
+
+            def _on_step(self) -> bool:
+                """
+                This method will be called by the model after each call to `env.step()`.
+                If the callback returns False, training is aborted early.
+                """
+                if self.num_timesteps > self.next_upload:
+                    connector.upload(
+                        agent=self.agent,
+                        evaluation_environment=training_environments[0],
+                        checkpoint_id=self.num_timesteps,
+                    )
+                    self.next_upload = self.num_timesteps + self.checkpoint_frequency
 
                 return True
 
@@ -130,7 +159,8 @@ class StableBaselinesAgent(Agent):
                     path=tmp_path, env=training_env, custom_objects=self.algorithm_parameters
                 )
 
-        self.algorithm.learn(total_timesteps=total_timesteps, callback=LoggingCallback())
+        callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
+        self.algorithm.learn(total_timesteps=total_timesteps, callback=callback_list)
 
     def choose_action(self, observation: object, *args, **kwargs):
         """
