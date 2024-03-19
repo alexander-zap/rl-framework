@@ -21,7 +21,6 @@ imageio = "^2.33.0"
 moviepy = "^1.0.3"
 clearml = "^1.14.1"
 dm-env-rpc = "^1.1.6"
-remote-gym = { git = "https://github.com/alexander-zap/remote-gym" }
 # mlagents_envs = { path = "../ml-agents/ml-agents-envs/", develop = true}
 
 [tool.poetry.group.dev.dependencies]
