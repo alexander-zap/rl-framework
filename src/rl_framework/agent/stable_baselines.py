@@ -1,13 +1,15 @@
 import tempfile
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-import gym
+import gymnasium
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
-from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.env_util import SubprocVecEnv
+from stable_baselines3.common.monitor import Monitor
 
 from rl_framework.agent import Agent
 from rl_framework.util import Connector
@@ -63,7 +65,7 @@ class StableBaselinesAgent(Agent):
 
     def train(
         self,
-        training_environments: List[gym.Env],
+        training_environments: List[gymnasium.Env],
         total_timesteps: int = 100000,
         connector: Optional[Connector] = None,
         *args,
@@ -78,7 +80,7 @@ class StableBaselinesAgent(Agent):
         after the agent has been trained.
 
         Args:
-            training_environments (List[gym.Env]): List of environments on which the agent should be trained on.
+            training_environments (List[gymnasium.Env]): List of environments on which the agent should be trained on.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
@@ -142,21 +144,22 @@ class StableBaselinesAgent(Agent):
 
                 return True
 
-        environment_iterator = iter(training_environments)
-        training_env = make_vec_env(
-            lambda: next(environment_iterator),
-            n_envs=len(training_environments),
-        )
+        def make_env(index: int):
+            return training_environments[index]
+
+        training_environments = [Monitor(env) for env in training_environments]
+        environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]
+        vectorized_environment = SubprocVecEnv(env_fns=environment_return_functions)
 
         if self.algorithm_needs_initialization:
-            self.algorithm = self.algorithm_class(env=training_env, **self.algorithm_parameters)
+            self.algorithm = self.algorithm_class(env=vectorized_environment, **self.algorithm_parameters)
             self.algorithm_needs_initialization = False
         else:
             with tempfile.TemporaryDirectory("w") as tmp_dir:
                 tmp_path = Path(tmp_dir) / "tmp_model.zip"
                 self.save_to_file(tmp_path)
                 self.algorithm = self.algorithm_class.load(
-                    path=tmp_path, env=training_env, custom_objects=self.algorithm_parameters
+                    path=tmp_path, env=vectorized_environment, custom_objects=self.algorithm_parameters
                 )
 
         callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
