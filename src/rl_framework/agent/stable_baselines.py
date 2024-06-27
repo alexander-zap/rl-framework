@@ -88,7 +88,8 @@ class StableBaselinesAgent(Agent):
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
-            env_class: Vectorized environment used to bundle gym environments
+            env_class: Class which bundles multiple gym environments into one vectorized environment object. 
+               See https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html for more details.
         """
 
         class LoggingCallback(BaseCallback):
