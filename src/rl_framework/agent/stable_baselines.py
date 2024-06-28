@@ -35,9 +35,9 @@ class StableBaselinesAgent(Agent):
         self._algorithm = value
 
     def __init__(
-            self,
-            algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
-            algorithm_parameters: Dict = None,
+        self,
+        algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO,
+        algorithm_parameters: Dict = None,
     ):
         """
         Initialize an agent which will trained on one of Stable-Baselines3 algorithms.
@@ -53,12 +53,10 @@ class StableBaselinesAgent(Agent):
         """
         self.algorithm_class: Type[BaseAlgorithm] = algorithm.value
 
-        self.algorithm_parameters = self._add_required_default_parameters(
-            algorithm_parameters)
+        self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
 
         additional_parameters = (
-            {"_init_setup_model": False} if (
-                getattr(self.algorithm_class, "_setup_model", None)) else {}
+            {"_init_setup_model": False} if (getattr(self.algorithm_class, "_setup_model", None)) else {}
         )
 
         self.algorithm: BaseAlgorithm = self.algorithm_class(
@@ -67,13 +65,12 @@ class StableBaselinesAgent(Agent):
         self.algorithm_needs_initialization = True
 
     def train(
-            self,
-            training_environments: List[gymnasium.Env],
-            total_timesteps: int = 100000,
-            connector: Optional[Connector] = None,
-            env_class: VecEnv = SubprocVecEnv,
-            *args,
-            **kwargs,
+        self,
+        training_environments: List[gymnasium.Env],
+        total_timesteps: int = 100000,
+        connector: Optional[Connector] = None,
+        *args,
+        **kwargs,
     ):
         """
         Train the instantiated agent on the environment.
@@ -88,8 +85,6 @@ class StableBaselinesAgent(Agent):
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
-            env_class: Class which bundles multiple gym environments into one vectorized environment object. 
-               See https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html for more details.
         """
 
         class LoggingCallback(BaseCallback):
@@ -114,8 +109,7 @@ class StableBaselinesAgent(Agent):
                 self.episode_reward += self.locals["rewards"][0]
                 done = self.locals["dones"][0]
                 if done:
-                    connector.log_value(self.num_timesteps, self.episode_reward,
-                                        "Episode reward")
+                    connector.log_value(self.num_timesteps, self.episode_reward, "Episode reward")
                     self.episode_reward = 0
 
                 return True
@@ -155,27 +149,27 @@ class StableBaselinesAgent(Agent):
             return training_environments[index]
 
         training_environments = [Monitor(env) for env in training_environments]
-        environment_return_functions = [partial(make_env, env_index) for env_index in
-                                        range(len(training_environments))]
+        environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]
 
         # noinspection PyCallingNonCallable
-        vectorized_environment = env_class(env_fns=environment_return_functions)
+        vectorized_environment = self.to_vectorized_env(env_fns=environment_return_functions)
 
         if self.algorithm_needs_initialization:
-            self.algorithm = self.algorithm_class(env=vectorized_environment,
-                                                  **self.algorithm_parameters)
+            self.algorithm = self.algorithm_class(env=vectorized_environment, **self.algorithm_parameters)
             self.algorithm_needs_initialization = False
         else:
             with tempfile.TemporaryDirectory("w") as tmp_dir:
                 tmp_path = Path(tmp_dir) / "tmp_model.zip"
                 self.save_to_file(tmp_path)
                 self.algorithm = self.algorithm_class.load(
-                    path=tmp_path, env=vectorized_environment,
-                    custom_objects=self.algorithm_parameters
+                    path=tmp_path, env=vectorized_environment, custom_objects=self.algorithm_parameters
                 )
 
         callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
         self.algorithm.learn(total_timesteps=total_timesteps, callback=callback_list)
+
+    def to_vectorized_env(self, env_fns) -> VecEnv:
+        return SubprocVecEnv(env_fns)
 
     def choose_action(self, observation: object, *args, **kwargs):
         """
@@ -206,8 +200,7 @@ class StableBaselinesAgent(Agent):
         """
         self.algorithm.save(file_path)
 
-    def load_from_file(self, file_path: Path, algorithm_parameters: Dict = None, *args,
-                       **kwargs) -> None:
+    def load_from_file(self, file_path: Path, algorithm_parameters: Dict = None, *args, **kwargs) -> None:
         """Load the agent in-place from an agent-save folder.
 
         Args:
@@ -215,10 +208,8 @@ class StableBaselinesAgent(Agent):
             algorithm_parameters: Parameters to be set for the loaded algorithm.
         """
         if algorithm_parameters:
-            self.algorithm_parameters = self._add_required_default_parameters(
-                algorithm_parameters)
-        self.algorithm = self.algorithm_class.load(path=file_path, env=None,
-                                                   custom_objects=self.algorithm_parameters)
+            self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
+        self.algorithm = self.algorithm_class.load(path=file_path, env=None, custom_objects=self.algorithm_parameters)
         self.algorithm_needs_initialization = False
 
     @staticmethod
