@@ -9,7 +9,7 @@ from async_gym_agents.envs.multi_env import IndexableMultiEnv
 @dataclass
 class FakeEnum:
     name: str
-    value: int
+    value: any
 
 
 class AsyncStableBaselinesAgent(StableBaselinesAgent):
