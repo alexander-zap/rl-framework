@@ -39,6 +39,7 @@ class Agent(ABC):
         self,
         connector: Connector,
         evaluation_environment: Environment,
+        deterministic_evaluation: bool = False,
     ) -> None:
         """
         Evaluate and upload the decision-making agent (and its .algorithm attribute) to the connector.
@@ -47,10 +48,11 @@ class Agent(ABC):
         Args:
             connector: Connector for uploading.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
+            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
+                should be determined in a deterministic or stochastic way.
         """
         connector.upload(
-            agent=self,
-            evaluation_environment=evaluation_environment,
+            agent=self, evaluation_environment=evaluation_environment, deterministic_evaluation=deterministic_evaluation
         )
 
     def download(
