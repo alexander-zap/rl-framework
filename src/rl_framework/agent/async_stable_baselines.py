@@ -1,22 +1,16 @@
-from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Type
 
-from rl_framework.agent import StableBaselinesAgent, StableBaselinesAlgorithm
+import stable_baselines3
 from async_gym_agents.agents.async_agent import get_injected_agent
 from async_gym_agents.envs.multi_env import IndexableMultiEnv
+from stable_baselines3.common.base_class import BaseAlgorithm
 
-
-@dataclass
-class FakeEnum:
-    name: str
-    value: any
+from rl_framework.agent import StableBaselinesAgent
 
 
 class AsyncStableBaselinesAgent(StableBaselinesAgent):
-    def __init__(
-        self, algorithm: StableBaselinesAlgorithm = StableBaselinesAlgorithm.PPO, algorithm_parameters: Dict = None
-    ):
-        super().__init__(FakeEnum(algorithm.name, get_injected_agent(algorithm.value)), algorithm_parameters)
+    def __init__(self, algorithm_class: Type[BaseAlgorithm] = stable_baselines3.PPO, algorithm_parameters: Dict = None):
+        super().__init__(get_injected_agent(algorithm_class), algorithm_parameters)
 
     def to_vectorized_env(self, env_fns):
         return IndexableMultiEnv(env_fns)
