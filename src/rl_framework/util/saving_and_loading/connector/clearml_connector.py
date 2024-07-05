@@ -110,12 +110,14 @@ class ClearMLConnector(Connector):
                 agent=agent,
                 evaluation_environment=evaluation_environment,
                 n_eval_episodes=n_eval_episodes,
+                deterministic=False,
             )
-            experiment_result = {
-                "mean_reward": round(mean_reward, 2),
-                "std_reward": round(std_reward, 2),
-            }
-            self.task.upload_artifact(name="experiment_result", artifact_object=experiment_result)
+
+            self.task.logger.report_single_value("mean_reward", round(mean_reward, 2))
+            self.task.logger.report_single_value(
+                "std_reward",
+                round(std_reward, 2),
+            )
 
             # Step 3: Create a system info dictionary and upload it
             logging.debug("Uploading system meta information ...")
