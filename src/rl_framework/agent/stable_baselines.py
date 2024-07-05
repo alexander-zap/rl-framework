@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Type
 
 import gymnasium
+import numpy as np
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
@@ -97,19 +98,19 @@ class StableBaselinesAgent(Agent):
                     verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
                 """
                 super().__init__(verbose)
-                self.episode_reward = 0
+                self.episode_reward = np.zeros(len(training_environments))
 
             def _on_step(self) -> bool:
                 """
                 This method will be called by the model after each call to `env.step()`.
                 If the callback returns False, training is aborted early.
                 """
-                # FIXME: Currently only calculates for first environment (at index 0)
-                self.episode_reward += self.locals["rewards"][0]
-                done = self.locals["dones"][0]
-                if done:
-                    connector.log_value(self.num_timesteps, self.episode_reward, "Episode reward")
-                    self.episode_reward = 0
+                self.episode_reward += self.locals["rewards"]
+                done_indices = np.where(self.locals["dones"] is True)
+                if done_indices:
+                    for done_index in done_indices:
+                        connector.log_value(self.num_timesteps, self.episode_reward[done_index], "Episode reward")
+                        self.episode_reward[done_index] = 0
 
                 return True
 
@@ -165,12 +166,13 @@ class StableBaselinesAgent(Agent):
         callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
         self.algorithm.learn(total_timesteps=total_timesteps, callback=callback_list)
 
-    def choose_action(self, observation: object, *args, **kwargs):
+    def choose_action(self, observation: object, deterministic: bool = False, *args, **kwargs):
         """
         Chooses action which the agent will perform next, according to the observed environment.
 
         Args:
             observation (object): Observation of the environment
+            deterministic (bool): Whether the action should be determined in a deterministic or stochastic way.
 
         Returns: action (int): Action to take according to policy.
 
@@ -182,7 +184,7 @@ class StableBaselinesAgent(Agent):
             _,
         ) = self.algorithm.predict(
             [observation],
-            deterministic=True,
+            deterministic=deterministic,
         )
         return action[0]
 

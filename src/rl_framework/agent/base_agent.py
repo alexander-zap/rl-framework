@@ -24,7 +24,7 @@ class Agent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def choose_action(self, observation: object, *args, **kwargs):
+    def choose_action(self, observation: object, deterministic: bool, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

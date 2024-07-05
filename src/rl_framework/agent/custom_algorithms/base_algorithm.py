@@ -11,7 +11,7 @@ class Algorithm(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def choose_action(self, observation, *args, **kwargs):
+    def choose_action(self, observation, deterministic, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
