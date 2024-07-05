@@ -1,16 +1,10 @@
-from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type
 
 from rl_framework.agent import Agent
+from rl_framework.agent.custom_algorithms import CustomAlgorithm, QLearning
 from rl_framework.environment import Environment
 from rl_framework.util import Connector
-
-from .custom_algorithms import QLearning
-
-
-class CustomAlgorithm(Enum):
-    Q_LEARNING = QLearning
 
 
 class CustomAgent(Agent):
@@ -24,20 +18,18 @@ class CustomAgent(Agent):
 
     def __init__(
         self,
-        algorithm: CustomAlgorithm = CustomAlgorithm.Q_LEARNING,
+        algorithm_class: Type[CustomAlgorithm] = QLearning,
         algorithm_parameters: Dict = None,
     ):
         """
         Initialize an agent which will trained on one of custom implemented algorithms.
 
         Args:
-            algorithm (CustomAlgorithm): Enum with values being custom implemented Algorithm classes (Types).
+            algorithm_class (Type[Algorithm]): Class of custom implemented Algorithm.
                 Specifies the algorithm for RL training.
                 Defaults to Q-Learning.
             algorithm_parameters (Dict): Parameters / keyword arguments for the specified Algorithm class.
         """
-
-        algorithm_class = algorithm.value
 
         if algorithm_parameters is None:
             algorithm_parameters = {}
@@ -74,18 +66,19 @@ class CustomAgent(Agent):
             **kwargs,
         )
 
-    def choose_action(self, observation: object, *args, **kwargs):
+    def choose_action(self, observation: object, deterministic: bool = False, *args, **kwargs):
         """
         Chooses action which the agent will perform next, according to the observed environment.
 
         Args:
             observation (object): Observation of the environment
+            deterministic (bool): Whether the action should be determined in a deterministic or stochastic way.
 
         Returns: action (int): Action to take according to policy.
 
         """
 
-        return self.algorithm.choose_action(observation=observation, *args, **kwargs)
+        return self.algorithm.choose_action(observation=observation, deterministic=deterministic, *args, **kwargs)
 
     def save_to_file(self, file_path: Path, *args, **kwargs):
         """Save the agent to a file at a certain path (to be loadable again later).

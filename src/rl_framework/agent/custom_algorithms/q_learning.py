@@ -7,12 +7,12 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
+from rl_framework.agent.custom_algorithms.base_custom_algorithm import CustomAlgorithm
 from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
 
-class QLearning(Algorithm):
+class QLearning(CustomAlgorithm):
     @property
     def q_table(self):
         return self._q_table
@@ -66,12 +66,14 @@ class QLearning(Algorithm):
         q_new = (1 - self.alpha) * q_old + self.alpha * (reward + self.gamma * np.max(self._q_table[observation]))
         self._q_table[prev_observation, prev_action] = q_new
 
-    def choose_action(self, observation: object, *args, **kwargs) -> int:
+    def choose_action(self, observation: object, deterministic: bool = False, *args, **kwargs) -> int:
         """
         Chooses action which the agent will perform next, according to the observed environment.
 
         Args:
             observation (object): Observation of the environment
+            deterministic (bool): Whether the action should be determined in a deterministic or stochastic way.
+                NOTE: The Q-Table does not support stochastic action choice.
 
         Returns: action (int): Action to take according to policy.
 
@@ -167,7 +169,6 @@ class QLearning(Algorithm):
                 prev_action = action
 
                 if done:
-                    connector.log_value(current_timestep, episode_reward, "Episode reward")
                     current_timestep += episode_timestep
                     tqdm_progress_bar.n = current_timestep if current_timestep <= total_timesteps else total_timesteps
                     tqdm_progress_bar.refresh()
@@ -177,7 +178,10 @@ class QLearning(Algorithm):
                         if self.epsilon > self.epsilon_min
                         else self.epsilon
                     )
-                    connector.log_value(current_timestep, self.epsilon, "Epsilon")
+
+                    if connector:
+                        connector.log_value(current_timestep, episode_reward, "Episode reward")
+                        connector.log_value(current_timestep, self.epsilon, "Epsilon")
 
         tqdm_progress_bar.close()
 

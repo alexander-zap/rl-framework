@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Algorithm(ABC):
+class CustomAlgorithm(ABC):
     @abstractmethod
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
@@ -11,7 +11,7 @@ class Algorithm(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def choose_action(self, observation, *args, **kwargs):
+    def choose_action(self, observation, deterministic, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

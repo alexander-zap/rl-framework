@@ -58,7 +58,9 @@ class Connector(ABC):
         self.logging_history[value_name].append((timestep, value_scalar))
 
     @abstractmethod
-    def upload(self, agent, evaluation_environment, checkpoint_id=None, *args, **kwargs) -> None:
+    def upload(
+        self, agent, evaluation_environment, deterministic_evaluation=False, checkpoint_id=None, *args, **kwargs
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod

@@ -9,7 +9,7 @@ from typing import Optional, SupportsFloat, Text
 import stable_baselines3
 from clearml import Task
 
-from rl_framework.util import evaluate_agent
+from rl_framework.util.evaluating import evaluate_agent
 from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
@@ -67,14 +67,24 @@ class ClearMLConnector(Connector):
             title=value_name, series=value_name, value=value_scalar, iteration=timestep
         )
 
-    def upload(self, agent, evaluation_environment, checkpoint_id: Optional[int] = None, *args, **kwargs) -> None:
+    def upload(
+        self,
+        agent,
+        evaluation_environment,
+        deterministic_evaluation: bool = False,
+        checkpoint_id: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> None:
         """Evaluate the agent on the evaluation environment and generate a video.
          Afterward, upload the artifacts and the agent itself to a ClearML task.
 
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            checkpoint_id (int): If specified, we do not performa a final upload with evaluating and generating but
+            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
+                should be determined in a deterministic or stochastic way.
+            checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to ClearML.
         """
         file_name = self.upload_config.file_name
@@ -110,12 +120,14 @@ class ClearMLConnector(Connector):
                 agent=agent,
                 evaluation_environment=evaluation_environment,
                 n_eval_episodes=n_eval_episodes,
+                deterministic=deterministic_evaluation,
             )
-            experiment_result = {
-                "mean_reward": round(mean_reward, 2),
-                "std_reward": round(std_reward, 2),
-            }
-            self.task.upload_artifact(name="experiment_result", artifact_object=experiment_result)
+
+            self.task.logger.report_single_value("mean_reward", round(mean_reward, 2))
+            self.task.logger.report_single_value(
+                "std_reward",
+                round(std_reward, 2),
+            )
 
             # Step 3: Create a system info dictionary and upload it
             logging.debug("Uploading system meta information ...")
