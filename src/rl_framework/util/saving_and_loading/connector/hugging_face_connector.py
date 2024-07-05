@@ -61,7 +61,15 @@ class HuggingFaceConnector(Connector):
         """
         super().__init__(upload_config, download_config)
 
-    def upload(self, agent, evaluation_environment, checkpoint_id: Optional[int] = None, *args, **kwargs):
+    def upload(
+        self,
+        agent,
+        evaluation_environment,
+        deterministic_evaluation: bool = False,
+        checkpoint_id: Optional[int] = None,
+        *args,
+        **kwargs,
+    ):
         """
         Evaluate, generate a video and upload a model to Hugging Face Hub.
         This method does the complete pipeline:
@@ -73,7 +81,9 @@ class HuggingFaceConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            checkpoint_id (int): If specified, we do not performa a final upload with evaluating and generating but
+            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
+                should be determined in a deterministic or stochastic way.
+            checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to a "checkpoints" folder.
 
         NOTE: If after running the package_to_hub function, and it gives an issue of rebasing, please run the
@@ -132,6 +142,7 @@ class HuggingFaceConnector(Connector):
                 agent=agent,
                 evaluation_environment=evaluation_environment,
                 n_eval_episodes=n_eval_episodes,
+                deterministic=deterministic_evaluation,
             )
 
             evaluate_data = {
