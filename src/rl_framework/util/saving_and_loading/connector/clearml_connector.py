@@ -9,7 +9,7 @@ from typing import Optional, SupportsFloat, Text
 import stable_baselines3
 from clearml import Task
 
-from rl_framework.util import evaluate_agent
+from rl_framework.util.evaluating import evaluate_agent
 from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
