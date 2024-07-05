@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from rl_framework.agent.custom_algorithms import Algorithm
 from rl_framework.environment import Environment
 from rl_framework.util.saving_and_loading import Connector
 
@@ -14,7 +13,7 @@ class Agent(ABC):
         return NotImplementedError
 
     @abstractmethod
-    def __init__(self, algorithm: Algorithm, algorithm_parameters: Dict, *args, **kwargs):
+    def __init__(self, algorithm, algorithm_parameters: Dict, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod

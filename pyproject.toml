@@ -44,7 +44,7 @@ fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN
 unfixable = []
 
 # Skip unused import rule.
-extend-ignore = ["F401"]
+extend-ignore = ["F401", "E712"]
 
 # Exclude a variety of commonly ignored directories.
 exclude = [

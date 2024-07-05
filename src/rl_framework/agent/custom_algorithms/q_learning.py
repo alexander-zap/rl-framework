@@ -7,12 +7,12 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from rl_framework.agent.custom_algorithms.base_algorithm import Algorithm
+from rl_framework.agent.custom_algorithms.base_custom_algorithm import CustomAlgorithm
 from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
 
-class QLearning(Algorithm):
+class QLearning(CustomAlgorithm):
     @property
     def q_table(self):
         return self._q_table
@@ -169,7 +169,6 @@ class QLearning(Algorithm):
                 prev_action = action
 
                 if done:
-                    connector.log_value(current_timestep, episode_reward, "Episode reward")
                     current_timestep += episode_timestep
                     tqdm_progress_bar.n = current_timestep if current_timestep <= total_timesteps else total_timesteps
                     tqdm_progress_bar.refresh()
@@ -179,7 +178,10 @@ class QLearning(Algorithm):
                         if self.epsilon > self.epsilon_min
                         else self.epsilon
                     )
-                    connector.log_value(current_timestep, self.epsilon, "Epsilon")
+
+                    if connector:
+                        connector.log_value(current_timestep, episode_reward, "Episode reward")
+                        connector.log_value(current_timestep, self.epsilon, "Epsilon")
 
         tqdm_progress_bar.close()
 

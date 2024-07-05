@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Algorithm(ABC):
+class CustomAlgorithm(ABC):
     @abstractmethod
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
