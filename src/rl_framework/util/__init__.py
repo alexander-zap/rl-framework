@@ -5,6 +5,7 @@ from .saving_and_loading import (
     ClearMLUploadConfig,
     Connector,
     DownloadConfig,
+    DummyConnector,
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
     HuggingFaceUploadConfig,

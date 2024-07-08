@@ -4,6 +4,7 @@ from .connector import (
     ClearMLUploadConfig,
     Connector,
     DownloadConfig,
+    DummyConnector,
     HuggingFaceConnector,
     HuggingFaceDownloadConfig,
     HuggingFaceUploadConfig,
