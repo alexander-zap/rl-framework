@@ -12,7 +12,7 @@ from stable_baselines3.common.env_util import SubprocVecEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
-from rl_framework.agent import Agent
+from rl_framework.agent.base_agent import Agent
 from rl_framework.util import Connector
 
 

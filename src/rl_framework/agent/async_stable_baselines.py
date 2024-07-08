@@ -5,7 +5,7 @@ from async_gym_agents.agents.async_agent import get_injected_agent
 from async_gym_agents.envs.multi_env import IndexableMultiEnv
 from stable_baselines3.common.base_class import BaseAlgorithm
 
-from rl_framework.agent import StableBaselinesAgent
+from rl_framework.agent.stable_baselines import StableBaselinesAgent
 
 
 class AsyncStableBaselinesAgent(StableBaselinesAgent):
