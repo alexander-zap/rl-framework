@@ -10,8 +10,9 @@ from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.env_util import SubprocVecEnv
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
-from rl_framework.agent import Agent
+from rl_framework.agent.base_agent import Agent
 from rl_framework.util import Connector
 
 
@@ -139,7 +140,9 @@ class StableBaselinesAgent(Agent):
 
         training_environments = [Monitor(env) for env in training_environments]
         environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]
-        vectorized_environment = SubprocVecEnv(env_fns=environment_return_functions)
+
+        # noinspection PyCallingNonCallable
+        vectorized_environment = self.to_vectorized_env(env_fns=environment_return_functions)
 
         if self.algorithm_needs_initialization:
             self.algorithm = self.algorithm_class(env=vectorized_environment, **self.algorithm_parameters)
@@ -154,6 +157,9 @@ class StableBaselinesAgent(Agent):
 
         callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
         self.algorithm.learn(total_timesteps=total_timesteps, callback=callback_list)
+
+    def to_vectorized_env(self, env_fns) -> VecEnv:
+        return SubprocVecEnv(env_fns)
 
     def choose_action(self, observation: object, deterministic: bool = False, *args, **kwargs):
         """
