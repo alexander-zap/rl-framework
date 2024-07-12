@@ -8,7 +8,6 @@ from rl_framework.util import (
     ClearMLConnector,
     ClearMLDownloadConfig,
     ClearMLUploadConfig,
-    evaluate_agent,
 )
 
 # Flag whether to use StablesBaselinesAgent or CustomAgent for this example
@@ -70,8 +69,8 @@ if __name__ == "__main__":
     agent.train(training_environments=environments, total_timesteps=N_TRAINING_TIMESTEPS, connector=connector)
 
     # Evaluate the model
-    mean_reward, std_reward = evaluate_agent(
-        agent=agent, evaluation_environment=environments[0], n_eval_episodes=N_EVALUATION_EPISODES
+    mean_reward, std_reward = agent.evaluate(
+        evaluation_environment=environments[0], n_eval_episodes=N_EVALUATION_EPISODES
     )
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 

@@ -8,7 +8,7 @@ class DummyConnector(Connector):
         super().__init__(upload_config, download_config)
 
     def upload(
-        self, agent, evaluation_environment, parameters_to_upload={}, checkpoint_id=None, *args, **kwargs
+        self, agent, evaluation_environment, variable_values_to_log={}, checkpoint_id=None, *args, **kwargs
     ) -> None:
         pass
 

@@ -70,7 +70,7 @@ class ClearMLConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        parameters_to_upload: Dict = {},
+        variable_values_to_log: Dict = {},
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -81,7 +81,7 @@ class ClearMLConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            parameters_to_upload (Dict): additional inforamtion to be uploaded. eg evaluation results
+            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to ClearML.
         """
@@ -112,8 +112,11 @@ class ClearMLConnector(Connector):
             )
 
             # Step 2: Upload a dictionary with evaluation metrics
-            for key, value in parameters_to_upload.items():
-                self.task.logger.report_single_value(key, round(value, 2))
+            for key, value in variable_values_to_log.items():
+                if isinstance(value, float):
+                    self.task.logger.report_single_value(key, round(value, 2))
+                else:
+                    logging.warning(f"Parameter {key} is not 'float'. skiped...")
 
             # Step 3: Create a system info dictionary and upload it
             logging.debug("Uploading system meta information ...")

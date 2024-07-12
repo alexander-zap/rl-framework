@@ -36,7 +36,6 @@ class Agent(ABC):
         Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
 
         Args:
-            agent (Agent): Agent to evaluate
             evaluation_environment (Environment): The evaluation environment.
             n_eval_episodes (int): Number of episode to evaluate the agent.
             seeds (Optional[List[int]]): List of seeds for evaluations.
@@ -73,9 +72,7 @@ class Agent(ABC):
 
         mean_reward = np.mean(episode_rewards)
         std_reward = np.std(episode_rewards)
-
-        result = {"mean_reward": mean_reward, "std_reward": std_reward}
-        return result
+        return mean_reward, std_reward
 
     @abstractmethod
     def choose_action(self, observation: object, deterministic: bool, *args, **kwargs):
@@ -93,7 +90,7 @@ class Agent(ABC):
         self,
         connector: Connector,
         evaluation_environment: Environment,
-        parameters_to_upload: Dict,
+        variable_values_to_log: Dict,
     ) -> None:
         """
         Evaluate and upload the decision-making agent (and its .algorithm attribute) to the connector.
@@ -102,10 +99,10 @@ class Agent(ABC):
         Args:
             connector: Connector for uploading.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
-            parameters_to_upload (Dict): additional inforamtion to be uploaded. eg evaluation results
+            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
         """
         connector.upload(
-            agent=self, evaluation_environment=evaluation_environment, parameters_to_upload=parameters_to_upload
+            agent=self, evaluation_environment=evaluation_environment, variable_values_to_log=variable_values_to_log
         )
 
     def download(
