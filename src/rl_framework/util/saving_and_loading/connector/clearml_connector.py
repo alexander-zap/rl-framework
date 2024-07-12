@@ -4,12 +4,11 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, SupportsFloat, Text
+from typing import Dict, Optional, SupportsFloat, Text
 
 import stable_baselines3
 from clearml import Task
 
-from rl_framework.util.evaluating import evaluate_agent
 from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
@@ -71,7 +70,7 @@ class ClearMLConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        deterministic_evaluation: bool = False,
+        parameters_to_upload: Dict = {},
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -82,16 +81,14 @@ class ClearMLConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
-                should be determined in a deterministic or stochastic way.
+            parameters_to_upload (Dict): additional inforamtion to be uploaded. eg evaluation results
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to ClearML.
         """
         file_name = self.upload_config.file_name
-        n_eval_episodes = self.upload_config.n_eval_episodes
         video_length = self.upload_config.video_length
 
-        assert file_name, n_eval_episodes
+        assert file_name
 
         # Step 1: Save agent to temporary path and upload .zip file to ClearML
         with tempfile.TemporaryDirectory() as temp_path:
@@ -114,20 +111,9 @@ class ClearMLConnector(Connector):
                 "environment will be generated and uploaded to the 'Debug Sample' section of the ClearML experiment."
             )
 
-            # Step 2: Evaluate the agent and upload a dictionary with evaluation metrics
-            logging.debug("Evaluating agent and uploading experiment results ...")
-            mean_reward, std_reward = evaluate_agent(
-                agent=agent,
-                evaluation_environment=evaluation_environment,
-                n_eval_episodes=n_eval_episodes,
-                deterministic=deterministic_evaluation,
-            )
-
-            self.task.logger.report_single_value("mean_reward", round(mean_reward, 2))
-            self.task.logger.report_single_value(
-                "std_reward",
-                round(std_reward, 2),
-            )
+            # Step 2: Upload a dictionary with evaluation metrics
+            for key, value in parameters_to_upload.items():
+                self.task.logger.report_single_value(key, round(value, 2))
 
             # Step 3: Create a system info dictionary and upload it
             logging.debug("Uploading system meta information ...")

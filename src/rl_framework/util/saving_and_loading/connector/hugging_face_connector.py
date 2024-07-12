@@ -4,13 +4,12 @@ import logging
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Text
+from typing import Dict, Optional, Text
 
 import stable_baselines3
 from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 
-from rl_framework.util.evaluating import evaluate_agent
 from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
@@ -65,7 +64,7 @@ class HuggingFaceConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        deterministic_evaluation: bool = False,
+        parameters_to_upload: Dict = {},
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -81,8 +80,7 @@ class HuggingFaceConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
-                should be determined in a deterministic or stochastic way.
+            parameters_to_upload (Dict): additional inforamtion to be uploaded. eg evaluation results
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to a "checkpoints" folder.
 
@@ -137,14 +135,10 @@ class HuggingFaceConnector(Connector):
             # Step 3: Save the model
             agent.save_to_file(repo_local_path / file_name)
 
-            # Step 4: Evaluate the model and build JSON with evaluation metrics
-            mean_reward, std_reward = evaluate_agent(
-                agent=agent,
-                evaluation_environment=evaluation_environment,
-                n_eval_episodes=n_eval_episodes,
-                deterministic=deterministic_evaluation,
-            )
+            mean_reward = parameters_to_upload.get("mean_reward", 0.0)
+            std_reward = parameters_to_upload.get("std_reward", 0.0)
 
+            # Step 4: build JSON with evaluation metrics
             evaluate_data = {
                 "env_id": environment_name,
                 "mean_reward": mean_reward,
