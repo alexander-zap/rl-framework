@@ -77,7 +77,7 @@ Independent of which environment and which agent you choose, the unified interfa
 Once you trained the agent, you can evaluate the agent policy on the environment and get the average accumulated reward (and standard deviation) as evaluation metric.
 This evaluation method is implemented in the [util evaluation functions](src/rl_framework/util/evaluating.py) and called with one line of code:
 ```
-evaluate_agent(agent=agent, evaluation_environment=environment)
+agent.evaluate(evaluation_environment=environment, n_eval_episodes=100, deterministic=False)
 ```
 
 ### Uploading and downloading models from the HuggingFace Hub

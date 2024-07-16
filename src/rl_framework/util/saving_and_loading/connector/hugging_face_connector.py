@@ -4,13 +4,12 @@ import logging
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Text
+from typing import Dict, Optional, Text
 
 import stable_baselines3
 from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 from huggingface_hub.repocard import metadata_eval_result, metadata_save
 
-from rl_framework.util.evaluating import evaluate_agent
 from rl_framework.util.video_recording import record_video
 
 from .base_connector import Connector, DownloadConfig, UploadConfig
@@ -65,7 +64,7 @@ class HuggingFaceConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        deterministic_evaluation: bool = False,
+        variable_values_to_log: Dict = {},
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -81,8 +80,7 @@ class HuggingFaceConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            deterministic_evaluation (bool): Whether the action chosen by the agent in the evaluation
-                should be determined in a deterministic or stochastic way.
+            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to a "checkpoints" folder.
 
@@ -137,20 +135,14 @@ class HuggingFaceConnector(Connector):
             # Step 3: Save the model
             agent.save_to_file(repo_local_path / file_name)
 
-            # Step 4: Evaluate the model and build JSON with evaluation metrics
-            mean_reward, std_reward = evaluate_agent(
-                agent=agent,
-                evaluation_environment=evaluation_environment,
-                n_eval_episodes=n_eval_episodes,
-                deterministic=deterministic_evaluation,
-            )
-
+            # Step 4: update the JSON with everything stored in variable_values_to_log
             evaluate_data = {
                 "env_id": environment_name,
-                "mean_reward": mean_reward,
                 "n_eval_episodes": n_eval_episodes,
                 "eval_datetime": datetime.datetime.now().isoformat(),
             }
+            for key, value in variable_values_to_log.items():
+                evaluate_data[key] = value
 
             # Write a JSON file called "results.json" that will contain the
             # evaluation results
@@ -228,6 +220,12 @@ Further examples can be found in the [exploration section of the rl-framework re
                 "tags": [environment_name, "reinforcement-learning", "rl-framework"],
             }
 
+            metrics_value = "not evaluated"
+            mean_reward = variable_values_to_log.get("mean_reward")
+            std_reward = variable_values_to_log.get("std_reward")
+            if mean_reward and std_reward and isinstance(mean_reward, float) and isinstance(std_reward, float):
+                metrics_value = f"{mean_reward:.2f} +/- {std_reward:.2f}"
+
             # Add metrics
             metadata_eval = metadata_eval_result(
                 model_pretty_name=repo_name,
@@ -235,7 +233,7 @@ Further examples can be found in the [exploration section of the rl-framework re
                 task_id="reinforcement-learning",
                 metrics_pretty_name="mean_reward",
                 metrics_id="mean_reward",
-                metrics_value=f"{mean_reward:.2f} +/- {std_reward:.2f}",
+                metrics_value=metrics_value,
                 dataset_pretty_name=environment_name,
                 dataset_id=environment_name,
             )
