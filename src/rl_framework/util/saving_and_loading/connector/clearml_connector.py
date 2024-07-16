@@ -70,7 +70,7 @@ class ClearMLConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        variable_values_to_log: Dict = {},
+        variable_values_to_log: Dict = None,
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -81,10 +81,13 @@ class ClearMLConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
+            variable_values_to_log (Dict): Variable name and values to be uploaded and logged, e.g. evaluation metrics.
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to ClearML.
         """
+        if variable_values_to_log is None:
+            variable_values_to_log = {}
+
         file_name = self.upload_config.file_name
         video_length = self.upload_config.video_length
 
@@ -111,12 +114,12 @@ class ClearMLConnector(Connector):
                 "environment will be generated and uploaded to the 'Debug Sample' section of the ClearML experiment."
             )
 
-            # Step 2: Upload a dictionary with evaluation metrics
+            # Step 2: Upload a dictionary with variables to log (e.g. evaluation metrics)
             for key, value in variable_values_to_log.items():
                 if isinstance(value, float):
                     self.task.logger.report_single_value(key, round(value, 2))
                 else:
-                    logging.warning(f"Parameter {key} is not 'float'. skiped...")
+                    logging.warning(f"Value for parameter {key} is not 'float'. Skipping logging of value ...")
 
             # Step 3: Create a system info dictionary and upload it
             logging.debug("Uploading system meta information ...")

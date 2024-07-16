@@ -99,7 +99,7 @@ class Agent(ABC):
         Args:
             connector: Connector for uploading.
             evaluation_environment: Environment used for final evaluation and clip creation before upload.
-            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
+            variable_values_to_log (Dict): Variable name and values to be uploaded and logged, e.g. evaluation metrics.
         """
         connector.upload(
             agent=self, evaluation_environment=evaluation_environment, variable_values_to_log=variable_values_to_log

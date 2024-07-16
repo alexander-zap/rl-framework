@@ -64,7 +64,7 @@ class HuggingFaceConnector(Connector):
         self,
         agent,
         evaluation_environment,
-        variable_values_to_log: Dict = {},
+        variable_values_to_log: Dict = None,
         checkpoint_id: Optional[int] = None,
         *args,
         **kwargs,
@@ -80,7 +80,8 @@ class HuggingFaceConnector(Connector):
         Args:
             agent (Agent): Agent (and its .algorithm attribute) to be uploaded.
             evaluation_environment (Environment): Environment used for final evaluation and clip creation before upload.
-            variable_values_to_log (Dict): additional inforamtion to be uploaded. eg evaluation results
+            variable_values_to_log (Dict): Variable name and values to be uploaded and logged, e.g. evaluation metrics.
+                Should contain "mean_reward" and "std_reward" variables so that these can be saved in metadata.
             checkpoint_id (int): If specified, we do not perform a final upload with evaluating and generating but
                 instead upload only a model checkpoint to a "checkpoints" folder.
 
@@ -89,15 +90,17 @@ class HuggingFaceConnector(Connector):
             And don't forget to do a `git push` at the end to push the change to the hub.
         """
 
+        if variable_values_to_log is None:
+            variable_values_to_log = {}
+
         repository_id = self.upload_config.repository_id
         environment_name = self.upload_config.environment_name
         file_name = self.upload_config.file_name
         model_architecture = self.upload_config.model_architecture
         commit_message = self.upload_config.commit_message
-        n_eval_episodes = self.upload_config.n_eval_episodes
         video_length = self.upload_config.video_length
 
-        assert environment_name and file_name and model_architecture and commit_message and n_eval_episodes
+        assert environment_name and file_name and model_architecture and commit_message
 
         _, repo_name = repository_id.split("/")
 
@@ -136,18 +139,17 @@ class HuggingFaceConnector(Connector):
             agent.save_to_file(repo_local_path / file_name)
 
             # Step 4: update the JSON with everything stored in variable_values_to_log
-            evaluate_data = {
+            result_data = {
                 "env_id": environment_name,
-                "n_eval_episodes": n_eval_episodes,
-                "eval_datetime": datetime.datetime.now().isoformat(),
+                "datetime": datetime.datetime.now().isoformat(),
             }
             for key, value in variable_values_to_log.items():
-                evaluate_data[key] = value
+                result_data[key] = value
 
             # Write a JSON file called "results.json" that will contain the
             # evaluation results
             with open(repo_local_path / "results.json", "w") as outfile:
-                json.dump(evaluate_data, outfile)
+                json.dump(result_data, outfile)
 
             # Additionally write a JSON file for all manually logged training metrics
             with open(repo_local_path / "training_metrics.json", "w") as outfile:
@@ -170,7 +172,7 @@ class HuggingFaceConnector(Connector):
 # Custom implemented {model_architecture} agent playing on *{environment_name}*
 
 This is a trained model of an agent playing on the environment *{environment_name}*.
-The agent was trained with a {model_architecture} algorithm and evaluated for {n_eval_episodes} episodes.
+The agent was trained with a {model_architecture} algorithm.
 See further agent and evaluation metadata in the according README section.
 
 
@@ -226,7 +228,7 @@ Further examples can be found in the [exploration section of the rl-framework re
             if mean_reward and std_reward and isinstance(mean_reward, float) and isinstance(std_reward, float):
                 metrics_value = f"{mean_reward:.2f} +/- {std_reward:.2f}"
 
-            # Add metrics
+            # Add mean_reward metric (use "not evaluated" value if not specified in variable_values_to_log)
             metadata_eval = metadata_eval_result(
                 model_pretty_name=repo_name,
                 task_pretty_name="reinforcement-learning",

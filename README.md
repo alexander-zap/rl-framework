@@ -75,7 +75,7 @@ Independent of which environment and which agent you choose, the unified interfa
 ### Evaluating
 
 Once you trained the agent, you can evaluate the agent policy on the environment and get the average accumulated reward (and standard deviation) as evaluation metric.
-This evaluation method is implemented in the [util evaluation functions](src/rl_framework/util/evaluating.py) and called with one line of code:
+This evaluation method is implemented in the [evaluate function of the agent](src/rl_framework/agent/base_agent.py) and called with one line of code:
 ```
 agent.evaluate(evaluation_environment=environment, n_eval_episodes=100, deterministic=False)
 ```
@@ -105,7 +105,7 @@ agent = StableBaselinesAgent(
 agent.train(environments=environments, total_timesteps=100000)
 
 # Evaluate the model
-mean_reward, std_reward = evaluate(agent_to_evaluate=agent, evaluation_environment=environments[0])
+mean_reward, std_reward = agent.evaluate(evaluation_environment=environments[0])
 ```
 
 ## Development
