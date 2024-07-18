@@ -26,7 +26,7 @@ class ClearMLUploadConfig(UploadConfig):
     file_name: str
     n_eval_episodes: int
     video_length: int
-    project_name: Optional[str] = "synthetic-player"
+    project_name: str
     task_name: Optional[str] = None
 
 
