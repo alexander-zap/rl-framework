@@ -21,6 +21,8 @@ class ClearMLUploadConfig(UploadConfig):
     n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
     video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
         No video is uploaded if length is 0 or negative.
+    project_name (str): Project path in which the experiment run(s) will be created
+    task_name (Optional str): Name of experiment, None to use the script name
     """
 
     file_name: str
