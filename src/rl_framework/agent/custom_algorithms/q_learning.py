@@ -1,4 +1,5 @@
 import logging
+import os
 import pickle
 import random
 from pathlib import Path
@@ -193,6 +194,7 @@ class QLearning(CustomAlgorithm):
             file_path (Text): Path where the model should be saved to.
         """
         # TODO: Save other parameters as well (do not only save Q-table)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "wb") as f:
             pickle.dump(self.q_table, f)
 
