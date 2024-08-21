@@ -7,12 +7,28 @@ from typing import Dict, List, SupportsFloat, Text, Tuple
 
 @dataclass
 class UploadConfig(ABC):
+    """
+    file_name (Text): Name of the file the agent model should be saved to (uploaded model will be named accordingly).
+    video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
+        No video is uploaded if length is 0 or negative.
+    """
+
+    file_name: str
+    video_length: int
+
     def get_config_dict(self) -> Dict:
         return vars(self)
 
 
 @dataclass
 class DownloadConfig(ABC):
+    """
+    file_name (str): File name of previously saved agent model (the saved agent file previously uploaded).
+    """
+
+    download: bool
+    file_name: str
+
     def get_config_dict(self) -> Dict:
         return vars(self)
 

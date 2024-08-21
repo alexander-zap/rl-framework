@@ -20,7 +20,6 @@ class HuggingFaceUploadConfig(UploadConfig):
     """
     repository_id (Text): Repository ID from the HF Hub we want to upload to.
     environment_name (Text): Name of the environment (only used for the model card).
-    file_name (Text): Name of the model (uploaded model will be named accordingly).
     model_architecture (Text): Name of the used model architecture (only used for model card and metadata).
     commit_message (Text): Commit message for the HuggingFace repository commit.
     n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
@@ -30,22 +29,17 @@ class HuggingFaceUploadConfig(UploadConfig):
 
     repository_id: Text
     environment_name: Text
-    file_name: Text
     model_architecture: Text
     commit_message: Text
-    n_eval_episodes: int
-    video_length: int
 
 
 @dataclass
 class HuggingFaceDownloadConfig(DownloadConfig):
     """
     repository_id (Text): Repository ID from the HF Hub of the RL agent we want to download.
-    file_name (Text): The saved-agent filename located in the hugging face repository.
     """
 
     repository_id: Text
-    file_name: Text
 
 
 class HuggingFaceConnector(Connector):

@@ -16,27 +16,16 @@ from .base_connector import Connector, DownloadConfig, UploadConfig
 
 @dataclass
 class ClearMLUploadConfig(UploadConfig):
-    """
-    file_name (str): File name of agent to be saved to
-    n_eval_episodes (int): Number of episodes for agent evaluation to compute evaluation metrics
-    video_length (int): Length of video in frames (which should be generated and uploaded to the connector).
-        No video is uploaded if length is 0 or negative.
-    """
-
-    file_name: str
-    n_eval_episodes: int
-    video_length: int
+    pass
 
 
 @dataclass
 class ClearMLDownloadConfig(DownloadConfig):
     """
     task_id (str): Id of the existing ClearML task to download the agent from
-    file_name (str): File name of previously saved agent
     """
 
     task_id: str
-    file_name: str
 
 
 class ClearMLConnector(Connector):
