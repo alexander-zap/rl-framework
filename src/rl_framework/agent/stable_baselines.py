@@ -99,8 +99,9 @@ class StableBaselinesAgent(Agent):
                 done_indices = np.where(self.locals["dones"] == True)[0]
                 if done_indices.size != 0:
                     for done_index in done_indices:
-                        connector.log_value(self.num_timesteps, self.episode_reward[done_index], "Episode reward")
-                        self.episode_reward[done_index] = 0
+                        if not self.locals["infos"][done_index].get("discard", False):
+                            connector.log_value(self.num_timesteps, self.episode_reward[done_index], "Episode reward")
+                            self.episode_reward[done_index] = 0
 
                 return True
 
