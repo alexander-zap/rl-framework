@@ -27,10 +27,9 @@ if __name__ == "__main__":
     task = Task.init(project_name="synthetic-player")
     upload_connector_config = ClearMLUploadConfig(
         file_name="agent.pkl",
-        n_eval_episodes=50,
         video_length=0,
     )
-    download_connector_config = ClearMLDownloadConfig(task_id="", file_name="")
+    download_connector_config = ClearMLDownloadConfig(task_id="", file_name="", download=False)
     connector = ClearMLConnector(
         task=task, upload_config=upload_connector_config, download_config=download_connector_config
     )
