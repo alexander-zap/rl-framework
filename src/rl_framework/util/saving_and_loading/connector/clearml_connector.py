@@ -8,6 +8,7 @@ from typing import Dict, Optional, SupportsFloat, Text
 
 import stable_baselines3
 from clearml import Task
+from clearml.model import InputModel
 
 from rl_framework.util.video_recording import record_video
 
@@ -22,10 +23,10 @@ class ClearMLUploadConfig(UploadConfig):
 @dataclass
 class ClearMLDownloadConfig(DownloadConfig):
     """
-    task_id (str): Id of the existing ClearML task to download the agent from
+    model_id (str): Id of the existing ClearML model to download the agent from
     """
 
-    task_id: str
+    model_id: str
 
 
 class ClearMLConnector(Connector):
@@ -94,7 +95,7 @@ class ClearMLConnector(Connector):
             while not os.path.exists(agent_save_path):
                 time.sleep(1)
 
-            self.task.upload_artifact(name=f"{file_literal}{checkpoint_suffix}", artifact_object=temp_path)
+            self.task.update_output_model(name=f"{file_literal}{checkpoint_suffix}", model_path=temp_path)
 
         if not checkpoint_id:
             logging.info(
@@ -134,17 +135,14 @@ class ClearMLConnector(Connector):
             # TODO: Save README.md
 
     def download(self, *args, **kwargs) -> Path:
-        task_id = self.download_config.task_id
+        # noinspection PyUnresolvedReferences
+        model_id = self.download_config.model_id
         file_name = self.download_config.file_name
 
-        assert task_id, file_name
+        assert model_id
+        assert file_name
 
-        # Get previous task of same project
-        project_name = self.task.get_project_name()
-
-        # Download previously uploaded agent
-        preprocess_task = Task.get_task(task_id=task_id, project_name=project_name)
-        file_literal = str.split(file_name, ".")[0]
-        logging.debug(f"Downloading [Agent {file_literal}] from [Task {task_id}] of [Project {project_name}] ...")
-        file_path = preprocess_task.artifacts[file_literal].get_local_copy()
+        model = InputModel(model_id)
+        model.connect(self.task)
+        file_path = model.get_local_copy(raise_on_error=True)
         return Path(file_path) / file_name
