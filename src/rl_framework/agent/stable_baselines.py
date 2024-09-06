@@ -159,6 +159,8 @@ class StableBaselinesAgent(Agent):
         callback_list = CallbackList([SavingCallback(self), LoggingCallback()])
         self.algorithm.learn(total_timesteps=total_timesteps, callback=callback_list)
 
+        vectorized_environment.close()
+
     def to_vectorized_env(self, env_fns) -> VecEnv:
         return SubprocVecEnv(env_fns)
 
