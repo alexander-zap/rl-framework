@@ -23,7 +23,7 @@ class ClearMLUploadConfig(UploadConfig):
 @dataclass
 class ClearMLDownloadConfig(DownloadConfig):
     """
-    task_id (str): Id of the existing ClearML task to download the agent from
+    model_id (str): Id of the existing ClearML model to download the agent from
     """
 
     model_id: str
@@ -139,7 +139,8 @@ class ClearMLConnector(Connector):
         model_id = self.download_config.model_id
         file_name = self.download_config.file_name
 
-        assert model_id, file_name
+        assert model_id
+        assert file_name
 
         model = InputModel(model_id)
         model.connect(self.task)
