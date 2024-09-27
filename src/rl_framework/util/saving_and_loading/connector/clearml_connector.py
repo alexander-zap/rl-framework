@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, SupportsFloat, Text
@@ -17,16 +18,29 @@ from .base_connector import Connector, DownloadConfig, UploadConfig
 
 @dataclass
 class ClearMLUploadConfig(UploadConfig):
-    pass
+    """
+    task_name (Optional[str]): The name of the task, None uses the script name.
+    task_tags (list[str]): The default tags associated with the task.
+    model_tags (list[str]): The default tags associated with the output model.
+    """
+
+    task_name: Optional[str] = None
+    task_tags: list[str] = ()
+    model_tags: list[str] = ()
 
 
 @dataclass
 class ClearMLDownloadConfig(DownloadConfig):
     """
-    model_id (str): Id of the existing ClearML model to download the agent from
+    file_name (Optional[str]): The name of the output model and save file, used when a task_id is specified.
+    task_id (str): A ClearML task id.
+    If no file_name is provided, it will use the last added output model.
+    model_id (str): Id of the existing ClearML model to download the agent from, preferred over task_id and file_name.
     """
 
-    model_id: str
+    file_name: Optional[str] = None
+    task_id: str = None
+    model_id: str = None
 
 
 class ClearMLConnector(Connector):
@@ -40,6 +54,11 @@ class ClearMLConnector(Connector):
         """
         super().__init__(upload_config, download_config)
         self.task = task
+
+        if self.upload_config.task_name:
+            self.task.set_name(self.upload_config.task_name)
+
+        self.task.add_tags(self.upload_config.task_tags)
 
     def log_value(self, timestep: int, value_scalar: SupportsFloat, value_name: Text) -> None:
         """
@@ -83,19 +102,25 @@ class ClearMLConnector(Connector):
 
         assert file_name
 
-        # Step 1: Save agent to temporary path and upload .zip file to ClearML
-        with tempfile.TemporaryDirectory() as temp_path:
-            logging.debug(f"Saving agent to .zip file at {temp_path} and uploading artifact ...")
+        # Step 1: Save agent to temporary file and upload to ClearML
+        file_literal, file_ending = str.split(file_name, ".")
+        checkpoint_suffix = f"-{checkpoint_id}" if checkpoint_id else ""
+        file_name = f"{file_literal}{checkpoint_suffix}"
 
-            file_literal, file_ending = str.split(file_name, ".")
-            checkpoint_suffix = f"-{checkpoint_id}" if checkpoint_id else ""
+        # Save agent to file
+        agent_save_path = Path(f"{str(uuid.uuid1())}-{file_name}.{file_ending}")
+        logging.debug(f"Saving agent to .zip file at {agent_save_path} and uploading artifact ...")
+        agent.save_to_file(agent_save_path)
+        while not os.path.exists(agent_save_path):
+            time.sleep(1)
 
-            agent_save_path = Path(os.path.join(temp_path, f"{file_literal}{checkpoint_suffix}.{file_ending}"))
-            agent.save_to_file(agent_save_path)
-            while not os.path.exists(agent_save_path):
-                time.sleep(1)
-
-            self.task.update_output_model(name=f"{file_literal}{checkpoint_suffix}", model_path=temp_path)
+        # Upload to ClearML
+        self.task.update_output_model(
+            name=file_name,
+            model_name=file_name,
+            model_path=str(agent_save_path),
+            tags=["final"] + list(self.upload_config.model_tags) if checkpoint_id is None else ["checkpoint"],
+        )
 
         if not checkpoint_id:
             logging.info(
@@ -135,14 +160,23 @@ class ClearMLConnector(Connector):
             # TODO: Save README.md
 
     def download(self, *args, **kwargs) -> Path:
-        # noinspection PyUnresolvedReferences
+        task_id = self.download_config.task_id
         model_id = self.download_config.model_id
         file_name = self.download_config.file_name
 
-        assert model_id
-        assert file_name
+        # Search the model in the given task
+        if task_id and not model_id:
+            container = Task.get_task(task_id=task_id)
+            if file_name:
+                model_id = container.models["output"][file_name[:-4]].id
+            else:
+                model = container.models["output"][-1]
+                model_id = model.id
+
+        assert model_id, "Neither model_id nor task_id with optional file_name defined!"
 
         model = InputModel(model_id)
-        model.connect(self.task)
+        model.connect(self.task, name=model.name)
+
         file_path = model.get_local_copy(raise_on_error=True)
-        return Path(file_path) / file_name
+        return Path(file_path)
