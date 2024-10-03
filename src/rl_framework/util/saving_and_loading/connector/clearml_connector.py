@@ -58,7 +58,7 @@ class ClearMLConnector(Connector):
         if self.upload_config.task_name:
             self.task.set_name(self.upload_config.task_name)
 
-        self.task.add_tags(self.upload_config.task_tags)
+        self.task.add_tags(list(self.upload_config.task_tags))
 
     def log_value(self, timestep: int, value_scalar: SupportsFloat, value_name: Text) -> None:
         """
