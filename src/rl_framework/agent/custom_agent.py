@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
+import gymnasium as gym
+
 from rl_framework.agent import Agent
 from rl_framework.agent.custom_algorithms import CustomAlgorithm, QLearning
-from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
 
@@ -38,7 +39,7 @@ class CustomAgent(Agent):
 
     def train(
         self,
-        training_environments: List[Environment],
+        training_environments: List[gym.Env],
         total_timesteps: int,
         connector: Optional[Connector] = None,
         *args,
@@ -50,7 +51,7 @@ class CustomAgent(Agent):
         This training is done by using the agent-on-environment training method provided by the custom algorithm.
 
         Args:
-            training_environments (List[Environment): Environment on which the agent should be trained on.
+            training_environments (List[gym.Env]): Environment on which the agent should be trained on.
                 If n_environments is set above 1, multiple environments enables parallel training of an agent.
             total_timesteps (int): Amount of individual steps the agent should take before terminating the training.
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)

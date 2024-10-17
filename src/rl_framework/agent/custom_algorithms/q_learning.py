@@ -5,11 +5,11 @@ import random
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import gymnasium as gym
 import numpy as np
 from tqdm import tqdm
 
 from rl_framework.agent.custom_algorithms.base_custom_algorithm import CustomAlgorithm
-from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
 
@@ -84,7 +84,7 @@ class QLearning(CustomAlgorithm):
 
     def train(
         self,
-        training_environments: List[Environment],
+        training_environments: List[gym.Env],
         total_timesteps: int,
         connector: Optional[Connector] = None,
         *args,
@@ -99,7 +99,7 @@ class QLearning(CustomAlgorithm):
         after the agent has been trained.
 
         Args:
-            training_environments (List[Environment]): List of environments on which the agent should be trained on.
+            training_environments (List[gym.Env]): List of environments on which the agent should be trained on.
                 # NOTE: This class only supports training on one environment
             total_timesteps (int): Number of timesteps the agent should train for before terminating the training.
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
