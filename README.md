@@ -54,7 +54,7 @@ In short:
 ### Configuring an environment
 To integrate your environment you wish to train on, you need to create an Environment class representing your problem. For this you can
 - you use an existing Gym environment with [the `GymEnvironment` class](src/rl_framework/environment/gym_environment.py)
-- you use an existing MLAgent environment with [the `MLAgentsEnvironment` class](src/rl_framework/environment/mlagents_environment.py)
+- you use an existing MLAgent environment with [the `MLAgentsEnvironment` class](src/rl_framework/environment/unity_environment.py)
 - create a custom environment by inheriting from [the base `Environment` class](src/rl_framework/environment/base_environment.py), which specifies the required interface
 
 ### Configuring an agent
