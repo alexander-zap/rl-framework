@@ -1,11 +1,14 @@
+import logging
 import tempfile
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Type, Union
 
 import gymnasium
 import numpy as np
+import pettingzoo
 import stable_baselines3
+import supersuit as ss
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback, CallbackList
 from stable_baselines3.common.env_util import SubprocVecEnv
@@ -56,7 +59,7 @@ class StableBaselinesAgent(Agent):
 
     def train(
         self,
-        training_environments: List[gymnasium.Env],
+        training_environments: List[Union[gymnasium.Env, pettingzoo.ParallelEnv]],
         total_timesteps: int = 100000,
         connector: Optional[Connector] = None,
         *args,
@@ -139,11 +142,29 @@ class StableBaselinesAgent(Agent):
         def make_env(index: int):
             return training_environments[index]
 
-        training_environments = [Monitor(env) for env in training_environments]
-        environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]
+        if isinstance(training_environments[0], pettingzoo.ParallelEnv):
 
-        # noinspection PyCallingNonCallable
-        vectorized_environment = self.to_vectorized_env(env_fns=environment_return_functions)
+            def pettingzoo_environment_to_vectorized_environment(pettingzoo_environment: pettingzoo.ParallelEnv):
+                env = ss.pettingzoo_env_to_vec_env_v1(pettingzoo_environment)
+                env = ss.concat_vec_envs_v1(env, 1, num_cpus=1, base_class="stable_baselines3")
+                return env
+
+            if len(training_environments) > 1:
+                logging.warning(
+                    f"Reinforcement Learning algorithm {self.__class__.__qualname__} does not support "
+                    f"training on multiple multi-agent environments in parallel. Continuing with one environment as "
+                    f"training environment."
+                )
+
+            vectorized_environment = pettingzoo_environment_to_vectorized_environment(training_environments[0])
+        else:
+            training_environments = [Monitor(env) for env in training_environments]
+            environment_return_functions = [
+                partial(make_env, env_index) for env_index in range(len(training_environments))
+            ]
+
+            # noinspection PyCallingNonCallable
+            vectorized_environment = self.to_vectorized_env(env_fns=environment_return_functions)
 
         if self.algorithm_needs_initialization:
             self.algorithm = self.algorithm_class(env=vectorized_environment, **self.algorithm_parameters)

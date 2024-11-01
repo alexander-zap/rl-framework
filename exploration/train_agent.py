@@ -1,9 +1,9 @@
+import gymnasium as gym
 import stable_baselines3
 from clearml import Task
 
 from rl_framework.agent import CustomAgent, StableBaselinesAgent
 from rl_framework.agent.custom_algorithms import QLearning
-from rl_framework.environment.gym_environment import GymEnvironmentWrapper
 from rl_framework.util import (
     ClearMLConnector,
     ClearMLDownloadConfig,
@@ -21,7 +21,7 @@ N_EVALUATION_EPISODES = 100
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training
-    environments = [GymEnvironmentWrapper("Taxi-v3", render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
+    environments = [gym.make("Taxi-v3", render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Create connector
     task = Task.init(project_name="synthetic-player")
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         file_name="agent.pkl",
         video_length=0,
     )
-    download_connector_config = ClearMLDownloadConfig(task_id="", file_name="", download=False)
+    download_connector_config = ClearMLDownloadConfig(model_id="", file_name="", download=False)
     connector = ClearMLConnector(
         task=task, upload_config=upload_connector_config, download_config=download_connector_config
     )
@@ -77,4 +77,5 @@ if __name__ == "__main__":
     agent.upload(
         connector=connector,
         evaluation_environment=environments[0],
+        variable_values_to_log={"mean_reward": mean_reward, "std_reward": std_reward},
     )

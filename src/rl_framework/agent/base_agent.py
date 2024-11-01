@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
+import gymnasium as gym
 import numpy as np
+import pettingzoo
 from tqdm import tqdm
 
-from rl_framework.environment import Environment
 from rl_framework.util.saving_and_loading import Connector
 
 
@@ -21,22 +22,27 @@ class Agent(ABC):
 
     @abstractmethod
     def train(
-        self, training_environments: List[Environment], total_timesteps: int, connector: Connector, *args, **kwargs
+        self,
+        training_environments: List[Union[gym.Env, pettingzoo.ParallelEnv]],
+        total_timesteps: int,
+        connector: Connector,
+        *args,
+        **kwargs,
     ):
         raise NotImplementedError
 
     def evaluate(
         self,
-        evaluation_environment,
+        evaluation_environment: Union[gym.Env, pettingzoo.ParallelEnv],
         n_eval_episodes: int,
         seeds: Optional[List[int]] = None,
         deterministic: bool = False,
-    ) -> Dict:
+    ) -> Tuple:
         """
         Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
 
         Args:
-            evaluation_environment (Environment): The evaluation environment.
+            evaluation_environment (gym.Env or pettingzoo.ParallelEnv): The evaluation environment.
             n_eval_episodes (int): Number of episode to evaluate the agent.
             seeds (Optional[List[int]]): List of seeds for evaluations.
                 No seed is used if not provided or fewer seeds are provided then n_eval_episodes.
@@ -49,30 +55,60 @@ class Agent(ABC):
         for episode in tqdm(range(n_eval_episodes)):
             seed = seeds[episode] if episode < len(seeds) else None
             episode_reward = 0
-            prev_observation, _ = evaluation_environment.reset(seed=seed)
-            prev_action = self.choose_action(prev_observation, deterministic=deterministic)
 
-            while True:
-                (
-                    observation,
-                    reward,
-                    terminated,
-                    truncated,
-                    info,
-                ) = evaluation_environment.step(prev_action)
-                done = terminated or truncated
-                # next action to be executed (based on new observation)
-                action = self.choose_action(observation, deterministic=deterministic)
-                episode_reward += reward
-                prev_action = action
+            if isinstance(evaluation_environment, pettingzoo.ParallelEnv):
+                prev_observations, _ = evaluation_environment.reset(seed=seed)
+                prev_actions = {
+                    agent: self.choose_action(prev_observations[agent], deterministic=deterministic)
+                    for agent in evaluation_environment.agents
+                }
 
-                if done:
-                    episode_rewards.append(episode_reward)
-                    break
+                while True:
+                    (
+                        observations,
+                        rewards,
+                        terminations,
+                        truncations,
+                        infos,
+                    ) = evaluation_environment.step(prev_actions)
+                    done = any(terminations.values()) or any(truncations.values())
+                    # next action to be executed (based on new observation)
+                    actions = {
+                        agent: self.choose_action(observations[agent], deterministic=deterministic)
+                        for agent in evaluation_environment.agents
+                    }
+                    episode_reward += sum(rewards.values())
+                    prev_actions = actions
 
-        mean_reward = np.mean(episode_rewards)
-        std_reward = np.std(episode_rewards)
-        return mean_reward, std_reward
+                    if done:
+                        episode_rewards.append(episode_reward)
+                        break
+
+            else:
+                prev_observation, _ = evaluation_environment.reset(seed=seed)
+                prev_action = self.choose_action(prev_observation, deterministic=deterministic)
+
+                while True:
+                    (
+                        observation,
+                        reward,
+                        terminated,
+                        truncated,
+                        info,
+                    ) = evaluation_environment.step(prev_action)
+                    done = terminated or truncated
+                    # next action to be executed (based on new observation)
+                    action = self.choose_action(observation, deterministic=deterministic)
+                    episode_reward += reward
+                    prev_action = action
+
+                    if done:
+                        episode_rewards.append(episode_reward)
+                        break
+
+            mean_reward = np.mean(episode_rewards)
+            std_reward = np.std(episode_rewards)
+            return mean_reward, std_reward
 
     @abstractmethod
     def choose_action(self, observation: object, deterministic: bool, *args, **kwargs):
@@ -89,7 +125,7 @@ class Agent(ABC):
     def upload(
         self,
         connector: Connector,
-        evaluation_environment: Environment,
+        evaluation_environment: gym.Env,
         variable_values_to_log: Dict,
     ) -> None:
         """
