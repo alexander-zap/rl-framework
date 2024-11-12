@@ -12,11 +12,11 @@ from stable_baselines3.common.env_util import SubprocVecEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
-from rl_framework.agent.base_agent import Agent
+from rl_framework.agent.reinforcement.reinforcement_learning_agent import RLAgent
 from rl_framework.util import Connector
 
 
-class StableBaselinesAgent(Agent):
+class StableBaselinesAgent(RLAgent):
     @property
     def algorithm(self) -> BaseAlgorithm:
         return self._algorithm
@@ -56,9 +56,9 @@ class StableBaselinesAgent(Agent):
 
     def train(
         self,
-        training_environments: List[gymnasium.Env],
+        connector: Connector,
+        training_environments: List[gymnasium.Env] = None,
         total_timesteps: int = 100000,
-        connector: Optional[Connector] = None,
         *args,
         **kwargs,
     ):
@@ -138,6 +138,9 @@ class StableBaselinesAgent(Agent):
 
         def make_env(index: int):
             return training_environments[index]
+
+        if not training_environments:
+            raise ValueError("No training environments have been provided to the train-method.")
 
         training_environments = [Monitor(env) for env in training_environments]
         environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]

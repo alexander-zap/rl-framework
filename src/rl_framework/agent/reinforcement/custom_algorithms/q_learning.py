@@ -8,7 +8,9 @@ from typing import Dict, List, Optional
 import numpy as np
 from tqdm import tqdm
 
-from rl_framework.agent.custom_algorithms.base_custom_algorithm import CustomAlgorithm
+from rl_framework.agent.reinforcement.custom_algorithms.base_custom_algorithm import (
+    CustomAlgorithm,
+)
 from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
@@ -84,9 +86,9 @@ class QLearning(CustomAlgorithm):
 
     def train(
         self,
+        connector: Connector,
         training_environments: List[Environment],
         total_timesteps: int,
-        connector: Optional[Connector] = None,
         *args,
         **kwargs,
     ):
