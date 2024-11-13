@@ -9,6 +9,7 @@ class ILAgent(Agent, ABC):
     @abstractmethod
     def train(
         self,
+        total_timesteps: int,
         connector: Connector,
         episode_sequences: List[List[Tuple[object, object, object, float, bool, bool, dict]]] = None,
         *args,
@@ -18,6 +19,7 @@ class ILAgent(Agent, ABC):
         Method starting training for imitation learning agents.
 
         Args:
+            total_timesteps (int): Amount of (recorded) timesteps to train the agent on.
             connector: Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
             episode_sequences: List of episode sequences on which the agent should be trained on.
@@ -27,7 +29,7 @@ class ILAgent(Agent, ABC):
                     (obs_t1, action_t1, next_obs_t1, reward_t1, terminated_t1, truncated_t1, info_t1),
                     ...
                 ]
-                Interpretation: Transition from obs to next_obs with action, receiving reward.
+                Interpretation: Transition from obs to next_obs (next_obs_t == obs_t+1) with action, receiving reward.
                     Additional information returned about transition to next_obs: terminated, truncated and info.
         """
         raise NotImplementedError

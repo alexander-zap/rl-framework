@@ -8,5 +8,12 @@ from rl_framework.util.saving_and_loading import Connector
 
 class RLAgent(Agent, ABC):
     @abstractmethod
-    def train(self, connector: Connector, training_environments: List[Environment] = None, *args, **kwargs):
+    def train(
+        self,
+        total_timesteps: int,
+        connector: Connector,
+        training_environments: List[Environment] = None,
+        *args,
+        **kwargs,
+    ):
         raise NotImplementedError

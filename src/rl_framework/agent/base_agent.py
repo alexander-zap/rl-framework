@@ -20,7 +20,7 @@ class Agent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def train(self, connector: Connector, *args, **kwargs):
+    def train(self, total_timesteps: int, connector: Connector, *args, **kwargs):
         raise NotImplementedError
 
     def evaluate(

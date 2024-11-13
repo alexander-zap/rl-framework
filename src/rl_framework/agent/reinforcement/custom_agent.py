@@ -41,9 +41,9 @@ class CustomAgent(RLAgent):
 
     def train(
         self,
+        total_timesteps: int,
         connector: Connector,
         training_environments: List[Environment] = None,
-        total_timesteps: int = 100000,
         *args,
         **kwargs,
     ):

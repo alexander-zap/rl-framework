@@ -46,6 +46,7 @@ class ImitationAgent(ILAgent):
 
     def train(
         self,
+        total_timesteps: int,
         connector: Connector,
         episode_sequences: List[List[Tuple[object, object, object, float, bool, bool, dict]]] = None,
         training_environments: List[gymnasium.Env] = None,
@@ -61,6 +62,7 @@ class ImitationAgent(ILAgent):
         after the agent has been trained.
 
         Args:
+            total_timesteps (int): Amount of (recorded) timesteps to train the agent on.
             episode_sequences (List): List of episode sequences on which the agent should be trained on.
             training_environments (List): List of environments
                 Required for interaction or attribute extraction (e.g., action/observation space) for some algorithms

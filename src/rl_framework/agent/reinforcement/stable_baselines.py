@@ -56,9 +56,9 @@ class StableBaselinesAgent(RLAgent):
 
     def train(
         self,
+        total_timesteps: int,
         connector: Connector,
         training_environments: List[gymnasium.Env] = None,
-        total_timesteps: int = 100000,
         *args,
         **kwargs,
     ):
