@@ -1,12 +1,13 @@
 import copy
+import math
 import pickle
 from pathlib import Path
 from typing import Dict, List, Tuple, Type
 
 import gymnasium
 import numpy as np
-from imitation.algorithms import bc
 from imitation.algorithms.base import DemonstrationAlgorithm
+from imitation.algorithms.bc import BC, BCLogger
 from imitation.data.rollout import flatten_trajectories
 from imitation.data.types import TrajectoryWithRew
 
@@ -25,7 +26,7 @@ class ImitationAgent(ILAgent):
 
     def __init__(
         self,
-        algorithm_class: Type[DemonstrationAlgorithm] = bc.BC,
+        algorithm_class: Type[DemonstrationAlgorithm] = BC,
         algorithm_parameters: Dict = None,
     ):
         """
@@ -89,7 +90,7 @@ class ImitationAgent(ILAgent):
             raise ValueError("No transitions have been provided to the train-method.")
 
         if not self.algorithm:
-            if self.algorithm_class == bc.BC:
+            if self.algorithm_class == BC:
                 assert len(training_environments) > 0, "Behavioral Cloning requires training environment to be passed."
                 env = training_environments[0]
                 self.algorithm_parameters.update(
@@ -107,7 +108,7 @@ class ImitationAgent(ILAgent):
         transitions = convert_sequences_to_transitions(episode_sequences)
 
         self.algorithm.set_demonstrations(transitions)
-        self.algorithm.train(n_epochs=1)
+        self.algorithm.train(n_batches=math.ceil(total_timesteps / self.algorithm.batch_size))
 
     def choose_action(self, observation: object, deterministic: bool = False, *args, **kwargs):
         """
@@ -154,8 +155,8 @@ class ImitationAgent(ILAgent):
         with open(file_path, "rb") as f:
             self.algorithm: DemonstrationAlgorithm = pickle.load(f)
 
-            if self.algorithm_class == bc.BC:
-                self.algorithm._bc_logger = bc.BCLogger(self.algorithm.logger)
+            if self.algorithm_class == BC:
+                self.algorithm._bc_logger = BCLogger(self.algorithm.logger)
 
         if algorithm_parameters:
             self.algorithm_parameters.update(**algorithm_parameters)
