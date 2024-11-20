@@ -203,6 +203,7 @@ class StableBaselinesAgent(RLAgent):
         Args:
             file_path (Path): The model filename (file ending with .zip).
             algorithm_parameters: Parameters to be set for the loaded algorithm.
+                Providing None leads to keeping the previously set parameters.
         """
         if algorithm_parameters:
             self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
@@ -225,7 +226,10 @@ class StableBaselinesAgent(RLAgent):
 
         """
         if algorithm_parameters is None:
-            algorithm_parameters = {"policy": "MlpPolicy"}
+            algorithm_parameters = {}
+
+        if "policy" not in algorithm_parameters:
+            algorithm_parameters.update({"policy": "MlpPolicy"})
 
         # Existing tensorboard log paths can be used (e.g., for continuing training of downloaded agents).
         # If not provided, tensorboard will be logged to newly created temp dir.
