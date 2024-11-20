@@ -83,7 +83,7 @@ N_EVALUATION_EPISODES = 10
 
 if __name__ == "__main__":
     # Create environment(s); multiple environments for parallel training (used for hybrid IL approaches)
-    environments = [gym.make("seals:seals/CartPole-v0", render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
+    environments = [gym.make("CartPole-v1", render_mode="rgb_array") for _ in range(PARALLEL_ENVIRONMENTS)]
 
     # Create connector
     task = Task.init(project_name="synthetic-player", auto_connect_frameworks={"pytorch": False})
