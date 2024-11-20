@@ -3,7 +3,7 @@ import logging
 import shutil
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
 import gymnasium
 import numpy as np
@@ -65,7 +65,7 @@ class ImitationAgent(ILAgent):
                 for algorithm-specific params.
         """
         self.algorithm_wrapper: AlgorithmWrapper = IMITATION_ALGORITHM_WRAPPER_REGISTRY[algorithm_class]()
-        self.algorithm_parameters = algorithm_parameters if algorithm_parameters else {}
+        self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
         self.algorithm = None
         self.algorithm_policy = None
 
@@ -195,6 +195,7 @@ class ImitationAgent(ILAgent):
         Args:
             file_path (Path): The file path the agent has been saved to before.
             algorithm_parameters: Parameters to be set for the loaded algorithm.
+                Providing None leads to keeping the previously set parameters.
         """
         assert str(file_path).endswith(".zip")
 
@@ -206,3 +207,29 @@ class ImitationAgent(ILAgent):
         folder_path = Path(str(file_path)[:-4])
         shutil.unpack_archive(file_path, folder_path, "zip")
         self.algorithm_policy = self.algorithm_wrapper.load_from_file(folder_path)
+
+    @staticmethod
+    def _add_required_default_parameters(algorithm_parameters: Optional[Dict]):
+        """
+        Add missing required parameters to `algorithm_parameters`.
+        Required parameters currently are:
+            - "allow_variable_horizon": Allow using gym environments with variable episode lengths.
+                The `imitation` library discourages this, because algorithms are able to exploit this information.
+                See https://imitation.readthedocs.io/en/latest/main-concepts/variable_horizon.html
+                Nevertheless, we do not want the `imitation` library to not interfere with raising errors.
+                The user needs to explicitly enable this.
+
+        Args:
+            algorithm_parameters (Optional[Dict]): Parameters passed by user (in .__init__ or .load_from_file).
+
+        Returns:
+            algorithm_parameters (Dict): Parameter dictionary with filled up default parameter entries
+
+        """
+        if algorithm_parameters is None:
+            algorithm_parameters = {}
+
+        if "allow_variable_horizon" not in algorithm_parameters:
+            algorithm_parameters["allow_variable_horizon"] = True
+
+        return algorithm_parameters
