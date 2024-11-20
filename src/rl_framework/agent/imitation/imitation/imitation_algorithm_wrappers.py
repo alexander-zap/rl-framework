@@ -76,6 +76,7 @@ class BCAlgorithmWrapper(AlgorithmWrapper):
             "rng": np.random.default_rng(0),
             "policy": self.loaded_parameters.get("policy", None),
         }
+        parameters.update(**algorithm_parameters)
         algorithm = BC(demonstrations=trajectories, **parameters)
         return algorithm
 
@@ -94,7 +95,7 @@ class GAILAlgorithmWrapper(AlgorithmWrapper):
     def build_algorithm(self, algorithm_parameters, total_timesteps, trajectories, vectorized_environment) -> GAIL:
         parameters = {
             "venv": vectorized_environment,
-            "demo_batch_size": algorithm_parameters.get("demo_batch_size", 1024),
+            "demo_batch_size": 1024,
             # FIXME: Hard-coded PPO as default trajectory generation algorithm
             "gen_algo": self.loaded_parameters.get(
                 "gen_algo",
@@ -115,6 +116,7 @@ class GAILAlgorithmWrapper(AlgorithmWrapper):
         parameters["gen_train_timesteps"]: min(
             total_timesteps, parameters["gen_algo"].n_steps * vectorized_environment.num_envs
         )
+        parameters.update(**algorithm_parameters)
         algorithm = GAIL(demonstrations=trajectories, **parameters)
         return algorithm
 
@@ -136,7 +138,7 @@ class AIRLAlgorithmWrapper(AlgorithmWrapper):
     def build_algorithm(self, algorithm_parameters, total_timesteps, trajectories, vectorized_environment) -> AIRL:
         parameters = {
             "venv": vectorized_environment,
-            "demo_batch_size": algorithm_parameters.get("demo_batch_size", 1024),
+            "demo_batch_size": 1024,
             # FIXME: Hard-coded PPO as default trajectory generation algorithm
             "gen_algo": self.loaded_parameters.get(
                 "gen_algo",
@@ -157,6 +159,7 @@ class AIRLAlgorithmWrapper(AlgorithmWrapper):
         parameters["gen_train_timesteps"]: min(
             total_timesteps, parameters["gen_algo"].n_steps * vectorized_environment.num_envs
         )
+        parameters.update(**algorithm_parameters)
         algorithm = AIRL(demonstrations=trajectories, **parameters)
         return algorithm
 
@@ -191,6 +194,7 @@ class DensityAlgorithmWrapper(AlgorithmWrapper):
                 ),
             ),
         }
+        parameters.update(**algorithm_parameters)
         algorithm = DensityAlgorithm(demonstrations=trajectories, **parameters)
         return algorithm
 
@@ -211,10 +215,11 @@ class SQILAlgorithmWrapper(AlgorithmWrapper):
     def build_algorithm(self, algorithm_parameters, total_timesteps, trajectories, vectorized_environment) -> SQIL:
         parameters = {
             "venv": vectorized_environment,
-            "policy": algorithm_parameters.get("policy", "MlpPolicy"),
+            "policy": "MlpPolicy",
             # FIXME: Hard-coded DQN as default policy training algorithm
-            "rl_algo_class": algorithm_parameters.get("rl_algo_class", DQN),
+            "rl_algo_class": DQN,
         }
+        parameters.update(**algorithm_parameters)
         algorithm = SQIL(demonstrations=trajectories, **parameters)
         if "rl_algo" in self.loaded_parameters:
             algorithm.rl_algo = self.loaded_parameters.get("rl_algo")
