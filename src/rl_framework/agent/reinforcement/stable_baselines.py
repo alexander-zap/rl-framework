@@ -190,7 +190,7 @@ class StableBaselinesAgent(RLAgent):
         return action[0]
 
     def save_to_file(self, file_path: Path, *args, **kwargs) -> None:
-        """Save the agent to a folder (for later loading).
+        """Save the agent to a file (for later loading).
 
         Args:
             file_path (Path): The file where the agent should be saved to (SB3 expects a file name ending with .zip).
