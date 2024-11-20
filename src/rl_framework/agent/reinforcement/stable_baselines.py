@@ -206,7 +206,7 @@ class StableBaselinesAgent(RLAgent):
         """
         if algorithm_parameters:
             self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
-        self.algorithm = self.algorithm_class.load(path=file_path, env=None, custom_objects=self.algorithm_parameters)
+        self.algorithm = self.algorithm_class.load(path=file_path, env=None, **self.algorithm_parameters)
         self.algorithm_needs_initialization = False
 
     @staticmethod
