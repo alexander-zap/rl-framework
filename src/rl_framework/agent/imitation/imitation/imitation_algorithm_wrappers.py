@@ -11,6 +11,7 @@ from imitation.algorithms.base import DemonstrationAlgorithm
 from imitation.algorithms.bc import BC
 from imitation.algorithms.density import DensityAlgorithm
 from imitation.algorithms.sqil import SQIL
+from imitation.data.types import Transitions
 from imitation.rewards.reward_nets import BasicRewardNet
 from imitation.util.networks import RunningNorm
 from stable_baselines3 import DQN, PPO
@@ -217,6 +218,8 @@ class SQILAlgorithmWrapper(AlgorithmWrapper):
         algorithm = SQIL(demonstrations=trajectories, **parameters)
         if "rl_algo" in self.loaded_parameters:
             algorithm.rl_algo = self.loaded_parameters.get("rl_algo")
+            algorithm.rl_algo.set_env(vectorized_environment)
+            algorithm.rl_algo.replay_buffer.set_demonstrations(trajectories)
         return algorithm
 
     def train(self, algorithm, total_timesteps):
@@ -227,5 +230,16 @@ class SQILAlgorithmWrapper(AlgorithmWrapper):
 
     def load_algorithm(self, folder_path: Path):
         # FIXME: Only works because rl_algo_class is hard-coded to DQN above
-        rl_algo = DQN.load(folder_path / FILE_NAME_SB3_ALGORITHM)
+        rl_algo = DQN.load(
+            folder_path / FILE_NAME_SB3_ALGORITHM,
+            replay_buffer_kwargs={
+                "demonstrations": Transitions(
+                    obs=np.array([]),
+                    next_obs=np.array([]),
+                    acts=np.array([]),
+                    dones=np.array([], dtype=bool),
+                    infos=np.array([]),
+                )
+            },
+        )
         self.loaded_parameters.update({"rl_algo": rl_algo})
