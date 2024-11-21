@@ -64,7 +64,12 @@ class AlgorithmWrapper(ABC):
         try:
             self.load_algorithm(folder_path)
         except FileNotFoundError:
-            logging.warning("Existing algorithm could not be initialized from saved file. Loading only policy.")
+            logging.warning(
+                "Existing algorithm could not be initialized from saved file. This can be due to using a "
+                "different imitation algorithm class, or due to only saving the policy before manually. "
+                "\nOnly the policy will be loaded. "
+                "Subsequent training of the algorithm will be performed from scratch."
+            )
         return policy
 
 

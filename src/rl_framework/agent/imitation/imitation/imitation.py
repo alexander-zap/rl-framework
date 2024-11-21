@@ -1,5 +1,4 @@
 import copy
-import logging
 import shutil
 from functools import partial
 from pathlib import Path
@@ -177,12 +176,15 @@ class ImitationAgent(ILAgent):
         folder_path.mkdir(parents=True, exist_ok=True)
 
         if not self.algorithm and not self.algorithm_policy:
-            logging.warning(
-                "Trying to save non-initialized imitation algorithm and non-initialized policy. " "Saving empty folder."
+            raise AttributeError(
+                "Trying to save non-initialized imitation algorithm and non-initialized policy. "
+                "Call the train method first."
             )
         elif not self.algorithm:
-            logging.warning("Trying to save non-initialized imitation algorithm. Saving only policy.")
-            self.algorithm_wrapper.save_policy(self.algorithm_policy, folder_path)
+            raise AttributeError(
+                "Trying to save non-initialized imitation algorithm. "
+                "This likely is caused by trying to save a loaded model without re-training."
+            )
         else:
             self.algorithm_wrapper.save_to_file(self.algorithm, folder_path)
 
