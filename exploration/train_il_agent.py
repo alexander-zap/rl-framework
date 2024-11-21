@@ -33,7 +33,7 @@ def create_and_save_trajectories_dataset(env, timesteps, trajectories_dataset_pa
         policy = load_policy(
             "ppo-huggingface",
             organization="HumanCompatibleAI",
-            env_name="seals-CartPole-v0",
+            env_name="CartPole-v1",
             venv=venv,
         )
         return policy
