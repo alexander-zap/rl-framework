@@ -82,6 +82,8 @@ class BCAlgorithmWrapper(AlgorithmWrapper):
             "policy": self.loaded_parameters.get("policy", None),
         }
         parameters.update(**algorithm_parameters)
+        if parameters.pop("allow_variable_horizon", None) is not None:
+            logging.warning("BC algorithm does not support passing of the parameter `allow_variable_horizon`.")
         algorithm = BC(demonstrations=trajectories, **parameters)
         return algorithm
 
@@ -225,6 +227,8 @@ class SQILAlgorithmWrapper(AlgorithmWrapper):
             "rl_algo_class": DQN,
         }
         parameters.update(**algorithm_parameters)
+        if parameters.pop("allow_variable_horizon", None) is not None:
+            logging.warning("SQIL algorithm does not support passing of the parameter `allow_variable_horizon`.")
         algorithm = SQIL(demonstrations=trajectories, **parameters)
         if "rl_algo" in self.loaded_parameters:
             algorithm.rl_algo = self.loaded_parameters.get("rl_algo")
