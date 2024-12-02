@@ -219,7 +219,12 @@ Further examples can be found in the [exploration section of the rl-framework re
             metrics_value = "not evaluated"
             mean_reward = variable_values_to_log.get("mean_reward")
             std_reward = variable_values_to_log.get("std_reward")
-            if mean_reward and std_reward and isinstance(mean_reward, float) and isinstance(std_reward, float):
+            if (
+                mean_reward is not None
+                and std_reward is not None
+                and isinstance(mean_reward, float)
+                and isinstance(std_reward, float)
+            ):
                 metrics_value = f"{mean_reward:.2f} +/- {std_reward:.2f}"
 
             # Add mean_reward metric (use "not evaluated" value if not specified in variable_values_to_log)

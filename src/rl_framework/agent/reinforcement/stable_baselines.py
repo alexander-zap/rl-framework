@@ -12,11 +12,11 @@ from stable_baselines3.common.env_util import SubprocVecEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
-from rl_framework.agent.base_agent import Agent
+from rl_framework.agent.reinforcement.reinforcement_learning_agent import RLAgent
 from rl_framework.util import Connector
 
 
-class StableBaselinesAgent(Agent):
+class StableBaselinesAgent(RLAgent):
     @property
     def algorithm(self) -> BaseAlgorithm:
         return self._algorithm
@@ -56,9 +56,9 @@ class StableBaselinesAgent(Agent):
 
     def train(
         self,
-        training_environments: List[gymnasium.Env],
-        total_timesteps: int = 100000,
-        connector: Optional[Connector] = None,
+        total_timesteps: int,
+        connector: Connector,
+        training_environments: List[gymnasium.Env] = None,
         *args,
         **kwargs,
     ):
@@ -139,6 +139,9 @@ class StableBaselinesAgent(Agent):
         def make_env(index: int):
             return training_environments[index]
 
+        if not training_environments:
+            raise ValueError("No training environments have been provided to the train-method.")
+
         training_environments = [Monitor(env) for env in training_environments]
         environment_return_functions = [partial(make_env, env_index) for env_index in range(len(training_environments))]
 
@@ -187,7 +190,7 @@ class StableBaselinesAgent(Agent):
         return action[0]
 
     def save_to_file(self, file_path: Path, *args, **kwargs) -> None:
-        """Save the agent to a folder (for later loading).
+        """Save the agent to a file (for later loading).
 
         Args:
             file_path (Path): The file where the agent should be saved to (SB3 expects a file name ending with .zip).
@@ -200,10 +203,11 @@ class StableBaselinesAgent(Agent):
         Args:
             file_path (Path): The model filename (file ending with .zip).
             algorithm_parameters: Parameters to be set for the loaded algorithm.
+                Providing None leads to keeping the previously set parameters.
         """
         if algorithm_parameters:
             self.algorithm_parameters = self._add_required_default_parameters(algorithm_parameters)
-        self.algorithm = self.algorithm_class.load(path=file_path, env=None, custom_objects=self.algorithm_parameters)
+        self.algorithm = self.algorithm_class.load(path=file_path, env=None, **self.algorithm_parameters)
         self.algorithm_needs_initialization = False
 
     @staticmethod
@@ -222,7 +226,10 @@ class StableBaselinesAgent(Agent):
 
         """
         if algorithm_parameters is None:
-            algorithm_parameters = {"policy": "MlpPolicy"}
+            algorithm_parameters = {}
+
+        if "policy" not in algorithm_parameters:
+            algorithm_parameters.update({"policy": "MlpPolicy"})
 
         # Existing tensorboard log paths can be used (e.g., for continuing training of downloaded agents).
         # If not provided, tensorboard will be logged to newly created temp dir.

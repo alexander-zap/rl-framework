@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from tqdm import tqdm
@@ -16,13 +16,11 @@ class Agent(ABC):
         return NotImplementedError
 
     @abstractmethod
-    def __init__(self, algorithm, algorithm_parameters: Dict, *args, **kwargs):
+    def __init__(self, algorithm_class, algorithm_parameters: Dict, *args, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
-    def train(
-        self, training_environments: List[Environment], total_timesteps: int, connector: Connector, *args, **kwargs
-    ):
+    def train(self, total_timesteps: int, connector: Connector, *args, **kwargs):
         raise NotImplementedError
 
     def evaluate(
@@ -31,7 +29,7 @@ class Agent(ABC):
         n_eval_episodes: int,
         seeds: Optional[List[int]] = None,
         deterministic: bool = False,
-    ) -> Dict:
+    ) -> Tuple[float, float]:
         """
         Evaluate the agent for ``n_eval_episodes`` episodes and returns average reward and std of reward.
 
@@ -93,7 +91,7 @@ class Agent(ABC):
         variable_values_to_log: Dict,
     ) -> None:
         """
-        Evaluate and upload the decision-making agent (and its .algorithm attribute) to the connector.
+        Evaluate and upload the decision-making agent to the connector.
             Additional option: Generate a video of the agent interacting with the environment.
 
         Args:
