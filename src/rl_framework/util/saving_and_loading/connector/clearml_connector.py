@@ -95,7 +95,9 @@ class ClearMLConnector(Connector):
             while not os.path.exists(agent_save_path):
                 time.sleep(1)
 
-            self.task.update_output_model(name=f"{file_literal}{checkpoint_suffix}", model_path=temp_path)
+            self.task.update_output_model(
+                name=f"{file_literal}{checkpoint_suffix}", model_path=temp_path, auto_delete_file=False
+            )
 
         if not checkpoint_id:
             logging.info(

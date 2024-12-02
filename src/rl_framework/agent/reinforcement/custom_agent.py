@@ -1,13 +1,16 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-from rl_framework.agent import Agent
-from rl_framework.agent.custom_algorithms import CustomAlgorithm, QLearning
+from rl_framework.agent.reinforcement.custom_algorithms import (
+    CustomAlgorithm,
+    QLearning,
+)
+from rl_framework.agent.reinforcement.reinforcement_learning_agent import RLAgent
 from rl_framework.environment import Environment
 from rl_framework.util import Connector
 
 
-class CustomAgent(Agent):
+class CustomAgent(RLAgent):
     @property
     def algorithm(self):
         return self._algorithm
@@ -38,9 +41,9 @@ class CustomAgent(Agent):
 
     def train(
         self,
-        training_environments: List[Environment],
         total_timesteps: int,
-        connector: Optional[Connector] = None,
+        connector: Connector,
+        training_environments: List[Environment] = None,
         *args,
         **kwargs,
     ):
@@ -58,10 +61,13 @@ class CustomAgent(Agent):
                 Calls need to be declared manually in the code.
         """
 
+        if not training_environments:
+            raise ValueError("No training environments have been provided to the train-method.")
+
         self.algorithm.train(
+            connector=connector,
             training_environments=training_environments,
             total_timesteps=total_timesteps,
-            connector=connector,
             *args,
             **kwargs,
         )

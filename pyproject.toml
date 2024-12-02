@@ -13,7 +13,7 @@ include = ["src/rl_framework/res/*"]
 python = "^3.9"
 numpy = "^1.26.3"
 protobuf = "~3.20"
-gymnasium = "^0.28.1"
+gymnasium = "^0.29"
 stable-baselines3 = {extras = ["extra"], version = "^2.2"}
 tqdm = "^4.66"
 huggingface_hub = "^0.19"
@@ -22,6 +22,7 @@ moviepy = "^1.0.3"
 clearml = "^1.14.1"
 dm-env-rpc = "^1.1.6"
 async-gym-agents = {git = "https://github.com/Luke100000/async-gym-agents"}
+imitation = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11"
