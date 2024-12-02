@@ -54,7 +54,7 @@ def record_video(
                 env.close()
 
                 # Convert the video with x264 codec
-                inp = env.video_recorder.path
+                inp = env.video_path
                 out = file_path
                 os.system(f"ffmpeg -y -i {inp} -vcodec h264 {out}")
 
