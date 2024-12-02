@@ -135,6 +135,8 @@ class ImitationAgent(ILAgent):
 
         self.algorithm_policy = self.algorithm.policy
 
+        vectorized_environment.close()
+
     @staticmethod
     def to_vectorized_env(env_fns) -> VecEnv:
         return SubprocVecEnv(env_fns)
