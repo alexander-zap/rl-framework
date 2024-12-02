@@ -29,9 +29,7 @@ if __name__ == "__main__":
         file_name="agent.zip",
         video_length=0,
     )
-    download_connector_config = ClearMLDownloadConfig(
-        model_id="", file_name="agent.zip", download=DOWNLOAD_EXISTING_AGENT
-    )
+    download_connector_config = ClearMLDownloadConfig(model_id="", file_name="", download=DOWNLOAD_EXISTING_AGENT)
     connector = ClearMLConnector(
         task=task, upload_config=upload_connector_config, download_config=download_connector_config
     )
