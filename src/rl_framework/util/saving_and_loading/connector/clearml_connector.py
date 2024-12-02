@@ -179,4 +179,12 @@ class ClearMLConnector(Connector):
         model.connect(self.task, name=model.name)
 
         file_path = model.get_local_copy(raise_on_error=True)
+
+        # If it's a directory, then it is a legacy model
+        if Path(file_path).is_dir():
+            logging.info(
+                "Legacy model downloaded, make sure %s is the correct file name for the model file within.", file_path
+            )
+            return Path(file_path, file_name)
+
         return Path(file_path)
