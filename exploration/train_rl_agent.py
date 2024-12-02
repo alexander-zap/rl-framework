@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Create connector
     task = Task.init(project_name="synthetic-player")
     upload_connector_config = ClearMLUploadConfig(
-        file_name="agent.pkl",
+        file_name="agent.zip",
         video_length=0,
     )
     download_connector_config = ClearMLDownloadConfig(model_id="", file_name="", download=DOWNLOAD_EXISTING_AGENT)
