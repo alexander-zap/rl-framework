@@ -26,10 +26,10 @@ if __name__ == "__main__":
     # Create connector
     task = Task.init(project_name="synthetic-player")
     upload_connector_config = ClearMLUploadConfig(
-        file_name="agent.pkl",
+        file_name="agent.zip",
         video_length=0,
     )
-    download_connector_config = ClearMLDownloadConfig(task_id="", file_name="", download=False)
+    download_connector_config = ClearMLDownloadConfig(model_id="", file_name="", download=False)
     connector = ClearMLConnector(
         task=task, upload_config=upload_connector_config, download_config=download_connector_config
     )
@@ -74,7 +74,4 @@ if __name__ == "__main__":
     print(f"mean_reward={mean_reward:.2f} +/- {std_reward:.2f}")
 
     # Upload the model
-    agent.upload(
-        connector=connector,
-        evaluation_environment=environments[0],
-    )
+    agent.upload(connector=connector, evaluation_environment=environments[0], variable_values_to_log={})
