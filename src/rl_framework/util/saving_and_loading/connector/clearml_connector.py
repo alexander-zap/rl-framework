@@ -39,8 +39,8 @@ class ClearMLDownloadConfig(DownloadConfig):
     """
 
     file_name: Optional[str] = None
-    task_id: str = None
-    model_id: str = None
+    task_id: Optional[str] = None
+    model_id: Optional[str] = None
 
 
 class ClearMLConnector(Connector):
@@ -108,7 +108,7 @@ class ClearMLConnector(Connector):
         file_name = f"{file_literal}{checkpoint_suffix}"
 
         # Save agent to file
-        agent_save_path = Path(f"{str(uuid.uuid1())}-{file_name}.{file_ending}")
+        agent_save_path = Path(tempfile.gettempdir(), f"{str(uuid.uuid1())}-{file_name}.{file_ending}")
         logging.debug(f"Saving agent to .zip file at {agent_save_path} and uploading artifact ...")
         agent.save_to_file(agent_save_path)
         while not os.path.exists(agent_save_path):
