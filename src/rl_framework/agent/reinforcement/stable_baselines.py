@@ -184,7 +184,7 @@ class StableBaselinesAgent(RLAgent):
             action,
             _,
         ) = self.algorithm.predict(
-            [observation],
+            np.array([observation]),
             deterministic=deterministic,
         )
         return action[0]
