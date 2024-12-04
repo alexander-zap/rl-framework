@@ -17,6 +17,7 @@ class EpisodeSequence(Iterable[GenericEpisode], Sized):
         - Using generators for underlying data management
         - Format changing transformations also return generators
 
+    The sampling logic and order of episode generation is fully controlled by the `self._episode_generator` attribute.
 
     Each episode consists of a sequence, which has the following format:
         [
@@ -129,9 +130,7 @@ class EpisodeSequence(Iterable[GenericEpisode], Sized):
         Args:
             file_path: File path and file name to save episode sequence to.
         """
-        trajectories: Sequence[imitation.data.types.TrajectoryWithRew] = [
-            trajectory for trajectory in self.to_imitation_episodes()
-        ]
+        trajectories: Sequence[imitation.data.types.TrajectoryWithRew] = list(self.to_imitation_episodes())
         serialize.save(file_path, trajectories)
 
     def to_imitation_episodes(self) -> Generator[imitation.data.types.TrajectoryWithRew, None, None]:
