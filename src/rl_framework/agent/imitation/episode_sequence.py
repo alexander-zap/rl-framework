@@ -79,6 +79,18 @@ class EpisodeSequence(Iterable[GenericEpisode], Sized):
         episode_sequence._len = len(trajectories)
         return episode_sequence
 
+    def save(self, file_path):
+        """
+        Save episode sequence into a file, saved as HuggingFace dataset.
+
+        Args:
+            file_path: File path and file name to save episode sequence to.
+        """
+        trajectories: Sequence[imitation.data.types.TrajectoryWithRew] = [
+            trajectory for trajectory in self.to_imitation_episodes()
+        ]
+        serialize.save(file_path, trajectories)
+
     def to_imitation_episodes(self) -> Generator[imitation.data.types.TrajectoryWithRew, None, None]:
         self._episode_generator, episode_generator_copy = tee(self._episode_generator)
 
