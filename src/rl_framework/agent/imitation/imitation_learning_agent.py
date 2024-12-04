@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Tuple
 
 from rl_framework.agent import Agent
+from rl_framework.agent.imitation.episode_sequence import EpisodeSequence
 from rl_framework.util.saving_and_loading import Connector
 
 
@@ -11,7 +11,7 @@ class ILAgent(Agent, ABC):
         self,
         total_timesteps: int,
         connector: Connector,
-        episode_sequences: List[List[Tuple[object, object, object, float, bool, bool, dict]]] = None,
+        episode_sequence: EpisodeSequence = None,
         *args,
         **kwargs,
     ):
@@ -22,7 +22,7 @@ class ILAgent(Agent, ABC):
             total_timesteps (int): Amount of (recorded) timesteps to train the agent on.
             connector: Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
-            episode_sequences: List of episode sequences on which the agent should be trained on.
+            episode_sequence: List of episodes on which the agent should be trained on.
                 Each episode consists of a sequence, which has the following format:
                 [
                     (obs_t0, action_t0, next_obs_t0, reward_t0, terminated_t0, truncated_t0, info_t0),

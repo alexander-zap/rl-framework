@@ -24,6 +24,8 @@ dm-env-rpc = "^1.1.6"
 async-gym-agents = {git = "https://github.com/Luke100000/async-gym-agents"}
 imitation = "^1.0.0"
 pyarrow-hotfix = "^0.6"
+d3rlpy = "^2.6"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11"

@@ -1,22 +1,20 @@
-import copy
 import shutil
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Type
 
 import gymnasium
-import numpy as np
 from imitation.algorithms.adversarial.airl import AIRL
 from imitation.algorithms.adversarial.gail import GAIL
 from imitation.algorithms.base import DemonstrationAlgorithm
 from imitation.algorithms.bc import BC
 from imitation.algorithms.density import DensityAlgorithm
 from imitation.algorithms.sqil import SQIL
-from imitation.data.types import TrajectoryWithRew
 from stable_baselines3.common.env_util import SubprocVecEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 
+from rl_framework.agent.imitation.episode_sequence import EpisodeSequence
 from rl_framework.agent.imitation.imitation.imitation_algorithm_wrappers import (
     AIRLAlgorithmWrapper,
     AlgorithmWrapper,
@@ -72,7 +70,7 @@ class ImitationAgent(ILAgent):
         self,
         total_timesteps: int,
         connector: Connector,
-        episode_sequences: List[List[Tuple[object, object, object, float, bool, bool, dict]]] = None,
+        episode_sequence: EpisodeSequence = None,
         training_environments: List[gymnasium.Env] = None,
         *args,
         **kwargs,
@@ -87,34 +85,20 @@ class ImitationAgent(ILAgent):
 
         Args:
             total_timesteps (int): Amount of (recorded) timesteps to train the agent on.
-            episode_sequences (List): List of episode sequences on which the agent should be trained on.
+            episode_sequence (EpisodeSequence): List of episodes on which the agent should be trained on.
             training_environments (List): List of environments
                 Required for interaction or attribute extraction (e.g., action/observation space) for some algorithms
             connector (Connector): Connector for executing callbacks (e.g., logging metrics and saving checkpoints)
                 on training time. Calls need to be declared manually in the code.
         """
 
-        def convert_sequences_to_trajectories(sequences):
-            trajectories = []
-            for episode_sequence in sequences:
-                observations, actions, next_observations, rewards, terminations, truncations, infos = (
-                    np.array(x) for x in list(zip(*episode_sequence))
-                )
-                all_observations = np.vstack([copy.deepcopy(observations), copy.deepcopy(next_observations[-1])])
-                episode_trajectory = TrajectoryWithRew(
-                    obs=all_observations, acts=actions, rews=rewards, infos=infos, terminal=terminations[-1]
-                )
-                trajectories.append(episode_trajectory)
-
-            return trajectories
-
         def make_env(index: int):
             return training_environments[index]
 
-        if not episode_sequences:
+        if not episode_sequence:
             raise ValueError("No transitions have been provided to the train-method.")
 
-        trajectories = convert_sequences_to_trajectories(episode_sequences)
+        trajectories = episode_sequence.to_imitation_episodes()
 
         assert len(training_environments) > 0, (
             "All imitation algorithms require an environment to be passed. "
