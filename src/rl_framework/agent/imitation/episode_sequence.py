@@ -1,4 +1,5 @@
 import copy
+import itertools
 from itertools import tee
 from typing import Generator, Iterable, List, Sequence, Sized, Tuple
 
@@ -44,24 +45,24 @@ class EpisodeSequence(Iterable[GenericEpisode], Sized):
         return episode_generator_copy
 
     @staticmethod
-    def from_episode_generator(episode_generator: Generator[GenericEpisode, None, None]) -> "EpisodeSequence":
+    def from_episode_generator(
+        episode_generator: Generator[GenericEpisode, None, None], n_episodes: int
+    ) -> "EpisodeSequence":
         """
         Initialize an EpisodeSequence based on a provided generator (of GenericEpisode objects).
 
         Args:
-            episode_generator: Custom episode generator generating GenericEpisodes every time __next__() is called.
+            episode_generator (Generator): Custom episode generator generating GenericEpisodes
+                every time __next__() is called.
+            n_episodes (int): Amount of episodes the generator will generate (to limit infinite generators).
+                If amount of generated elements from generator are already known, pass it as "n_episodes".
 
         Returns:
             episode_sequence: Representation of episode sequence (this class).
         """
-        episode_generator, episode_generator_copy = tee(episode_generator)
-        len_episodes = 0
-        for _ in episode_generator_copy:
-            len_episodes += 1
-
         episode_sequence = EpisodeSequence()
-        episode_sequence._episode_generator = episode_generator
-        episode_sequence._len = len_episodes
+        episode_sequence._episode_generator = itertools.islice(episode_generator, n_episodes)
+        episode_sequence._len = n_episodes
         return episode_sequence
 
     @staticmethod
