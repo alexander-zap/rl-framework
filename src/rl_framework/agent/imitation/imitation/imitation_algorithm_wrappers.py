@@ -120,8 +120,8 @@ class GAILAlgorithmWrapper(AlgorithmWrapper):
                 ),
             ),
         }
-        parameters["gen_train_timesteps"]: min(
-            total_timesteps, parameters["gen_algo"].n_steps * vectorized_environment.num_envs
+        parameters["gen_train_timesteps"] = min(
+            total_timesteps, parameters.get("gen_algo").n_steps * vectorized_environment.num_envs
         )
         parameters.update(**algorithm_parameters)
         algorithm = GAIL(demonstrations=trajectories, **parameters)

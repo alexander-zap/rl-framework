@@ -1,5 +1,4 @@
 import os
-from typing import List, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -12,7 +11,7 @@ from stable_baselines3.common.env_util import DummyVecEnv
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.ppo import PPO, MlpPolicy
 
-from rl_framework.agent.imitation import ImitationAgent
+from rl_framework.agent.imitation import EpisodeSequence, ImitationAgent
 from rl_framework.util import (
     ClearMLConnector,
     ClearMLDownloadConfig,
@@ -52,28 +51,6 @@ def create_and_save_trajectories_dataset(env, timesteps, trajectories_dataset_pa
     serialize.save(trajectories_dataset_path, rollouts)
 
 
-def get_expert_sequences_from_trajectories_dataset(
-    trajectories_dataset_path,
-) -> List[List[Tuple[object, object, object, float, bool, bool, dict]]]:
-    trajectories = serialize.load_with_rewards(trajectories_dataset_path)
-
-    episode_sequences = []
-    for trajectory in trajectories:
-        obs = trajectory.obs[:-1]
-        acts = trajectory.acts
-        rews = trajectory.rews
-        next_obs = trajectory.obs[1:]
-        terminations = np.zeros(len(trajectory.acts), dtype=bool)
-        truncations = np.zeros(len(trajectory.acts), dtype=bool)
-        terminations[-1] = trajectory.terminal
-        truncations[-1] = not trajectory.terminal
-        infos = np.array([{}] * len(trajectory)) if trajectory.infos is None else trajectory.infos
-        episode_sequence = list(zip(*[obs, acts, next_obs, rews, terminations, truncations, infos]))
-        episode_sequences.append(episode_sequence)
-
-    return episode_sequences
-
-
 PARALLEL_ENVIRONMENTS = 8
 DOWNLOAD_EXISTING_AGENT = False
 TRAJECTORIES_PATH = "../data/test_rollouts"
@@ -110,9 +87,9 @@ if __name__ == "__main__":
         if not os.path.exists(TRAJECTORIES_PATH):
             create_and_save_trajectories_dataset(environments[0], N_TRAINING_TIMESTEPS, TRAJECTORIES_PATH)
 
-        sequences = get_expert_sequences_from_trajectories_dataset(TRAJECTORIES_PATH)
+        sequence = EpisodeSequence.from_dataset(TRAJECTORIES_PATH)
         agent.train(
-            episode_sequences=sequences,
+            episode_sequence=sequence,
             training_environments=environments,
             total_timesteps=N_TRAINING_TIMESTEPS,
             connector=connector,
