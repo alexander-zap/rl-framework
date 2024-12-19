@@ -40,10 +40,10 @@ imageio = "^2.33.0"
 moviepy = "^1.0.3"
 clearml = "^1.14.1"
 dm-env-rpc = "^1.1.6"
-async-gym-agents = {git = "https://github.com/Luke100000/async-gym-agents"}
 imitation = "^1.0.0"
 pyarrow-hotfix = "^0.6"
 d3rlpy = "^2.6"
+async-gym-agents = "^0.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2"
