@@ -171,7 +171,7 @@ See further agent and evaluation metadata in the according README section.
 
 
 ## Import
-The Python module used for training and uploading/downloading is [rl-framework](https://github.com/alexander-zap/rl-framework).
+The Python module used for training and uploading/downloading is [reinforcement-learning-framework](https://github.com/alexander-zap/reinforcement-learning-framework).
 It is an easy-to-read, plug-and-use Reinforcement Learning framework and provides standardized interfaces
 and implementations to various Reinforcement Learning methods and environments.
 
@@ -181,7 +181,7 @@ including the HuggingFace Hub.
 ## Usage
 ```python
 
-from rl-framework import {agent_class_name}, {algorithm_enum_class_name}
+from rl_framework import {agent_class_name}, {algorithm_enum_class_name}
 
 # Create new agent instance
 agent = {agent_class_name}(
@@ -198,7 +198,7 @@ agent.download(repository_id=repository_id, filename=file_name)
 
 ```
 
-Further examples can be found in the [exploration section of the rl-framework repository](https://github.com/alexander-zap/rl-framework/tree/main/exploration).
+Further examples can be found in the [exploration section of the reinforcement-learning-framework repository](https://github.com/alexander-zap/reinforcement-learning-framework/tree/main/exploration).
 
             """
 
@@ -213,7 +213,7 @@ Further examples can be found in the [exploration section of the rl-framework re
                 f.write(readme)
 
             metadata = {
-                "tags": [environment_name, "reinforcement-learning", "rl-framework"],
+                "tags": [environment_name, "reinforcement-learning"],
             }
 
             metrics_value = "not evaluated"

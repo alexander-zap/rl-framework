@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "rl-framework"
+name = "reinforcement-learning-framework"
 version = "0.6.0"
 description = "An easy-to-read Reinforcement Learning (RL) framework. Provides standardized interfaces and implementations to various Reinforcement Learning methods and environments. Also this is the main place to start your journey with Reinforcement Learning and learn from tutorials and examples."
-homepage = "https://github.com/alexander-zap/rl-framework"
+homepage = "https://github.com/alexander-zap/reinforcement-learning-framework"
 authors = ["Alexander Zap"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",

@@ -144,7 +144,7 @@ Assuming you already have Jupyter installed, you can make your virtual environme
 
 ```
 poetry add ipykernel
-poetry run python -m ipykernel install --user --name="rl-framework"
+poetry run python -m ipykernel install --user --name="reinforcement-learning-framework"
 ```
 
 Note that we mainly use notebooks for experiments, visualizations and reports. Every piece of functionality that is meant to be reused should go into module code and be imported into notebooks.
